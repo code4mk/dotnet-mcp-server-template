@@ -33,8 +33,8 @@ jobs:
           dotnet pack TemplatePack.csproj -c Release -o artifacts -p:PackageVersion=$VERSION
       - name: Package contains no local-only files
         run: |
-          if unzip -l artifacts/*.nupkg | awk '{print $4}' | grep -E '(^|/)\.env(\..+)?$' | grep -v '\.env\.example$'; then
-            echo "::error::The package contains a .env file"; exit 1
+          if unzip -l artifacts/*.nupkg | awk '{print $4}' | grep -E '(^|/)\.env(\..+)?$|(^|/)\.data/' | grep -v '\.env\.example$'; then
+            echo "::error::The package contains a .env file or .data/ sign-in data"; exit 1
           fi
       - name: Push to nuget.org
         run: >

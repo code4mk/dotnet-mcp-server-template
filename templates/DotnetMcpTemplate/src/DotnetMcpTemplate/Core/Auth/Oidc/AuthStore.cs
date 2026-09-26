@@ -43,5 +43,7 @@ public sealed class AuthStore(IDistributedCache cache)
 
     public static string RefreshKey(string token) => "refresh:" + AuthCrypto.Hash(token);
 
+    public static string RotatedKey(string token) => "rotated:" + AuthCrypto.Hash(token);
+
     public static string SessionKey(string sessionId) => "session:" + sessionId;
 }

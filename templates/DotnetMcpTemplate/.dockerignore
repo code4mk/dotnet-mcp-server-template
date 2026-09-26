@@ -10,3 +10,4 @@ docs/
 tests/
 .env
 .env.*
+.data/

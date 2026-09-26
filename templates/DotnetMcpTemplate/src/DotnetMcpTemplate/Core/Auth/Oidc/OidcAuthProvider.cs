@@ -1,6 +1,7 @@
 using DotnetMcpTemplate.Core.Auth.Providers;
 using DotnetMcpTemplate.Core.Common.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 
@@ -32,6 +33,10 @@ public sealed class OidcAuthProvider : IAuthProvider
                 options.Configuration = proxy.RedisUrl;
                 options.InstanceName = "mcp-auth:";
             });
+        }
+        else if (proxy.Store == "file")
+        {
+            services.AddSingleton<IDistributedCache>(sp => new FileDistributedCache(proxy.StorePath, sp.GetRequiredService<TimeProvider>()));
         }
         else
         {

@@ -37,7 +37,32 @@ Security properties: PKCE S256 on both legs, exact redirect URI match, registrat
 single-use codes (5 min), rotating single-use refresh tokens, audience-bound tokens (RFC 8707), `iss` in the
 authorization response (RFC 9207), codes/tokens stored by hash, IdP tokens encrypted (AES-GCM).
 
-Several instances: set `AUTH_STORE=redis` and `REDIS_URL`, and the same `AUTH_TOKEN_SIGNING_KEY` everywhere.
+### Staying signed in
+
+Users sign in once. After that the client keeps them signed in on its own:
+
+1. **Access tokens are short-lived** (`AUTH_TOKEN_LIFETIME_MINUTES`, 60). When one expires the server answers `401`,
+   and the client exchanges its refresh token at `/oauth/token` for a new pair. No login page, no consent.
+2. **Refresh tokens rotate:** each is used once. Every refresh also extends the session, the refresh token and the
+   client registration, so a user is only signed out after `AUTH_REFRESH_TOKEN_LIFETIME_DAYS` (30) **without using**
+   the server. An active user never signs in again.
+3. **Retries are safe:** for `AUTH_REFRESH_REUSE_SECONDS` (30) after a refresh, the old refresh token returns the same
+   new tokens again. Two requests refreshing at once, or a retry after a lost response, don't sign the user out.
+   After that window, reuse is rejected.
+4. **Restarts are safe:** sign-ins are stored where a restart can't lose them.
+
+| `AUTH_STORE` | Use for | Restarts / deploys |
+| --- | --- | --- |
+| `file` (default) | One instance | Kept, in `AUTH_STORE_PATH` (`.data/auth`; `/data/auth` on a volume in Docker) |
+| `redis` | Several instances (`REDIS_URL`) | Kept, and shared between instances |
+| `memory` | Tests | **Lost: every user signs in again** |
+
+Users are signed out when `AUTH_TOKEN_SIGNING_KEY` changes (it signs tokens and encrypts stored IdP tokens), when the
+store is deleted, or after the inactivity period. Several instances: set `AUTH_STORE=redis` and `REDIS_URL`, and the
+same `AUTH_TOKEN_SIGNING_KEY` everywhere.
+
+The store holds client registrations, sessions (user claims, encrypted IdP tokens) and hashed refresh tokens: keep
+`.data/` out of git (it is ignored) and back the Docker volume up like any other user data.
 
 ## Provider `jwt`
 

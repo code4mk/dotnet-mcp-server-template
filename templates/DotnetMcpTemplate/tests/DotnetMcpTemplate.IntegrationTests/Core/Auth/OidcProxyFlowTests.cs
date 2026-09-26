@@ -112,19 +112,54 @@ public sealed partial class OidcProxyFlowTests(OidcProxyServerFactory factory) :
         Assert.Contains("Research", text);        // OIDC_TOKEN_CLAIMS=department
         Assert.Contains("admin", text);           // roles from userinfo
 
-        // 7. Refresh tokens rotate and are single use
+        // 7. An expired access token is replaced with the refresh token, no sign-in; the new token works
+        factory.Clock.Reset();
         var refreshToken = tokens.GetProperty("refresh_token").GetString()!;
-        var refreshed = await Token(browser, new() { ["grant_type"] = "refresh_token", ["refresh_token"] = refreshToken, ["client_id"] = clientId });
-        Assert.NotEqual(refreshToken, refreshed.GetProperty("refresh_token").GetString());
+        var refreshed = await Token(browser, Refresh(refreshToken, clientId));
+        var newRefreshToken = refreshed.GetProperty("refresh_token").GetString()!;
+        Assert.NotEqual(refreshToken, newRefreshToken);
+        Assert.Equal("mcp:tools projects:write", refreshed.GetProperty("scope").GetString());
 
-        var reused = await browser.PostAsync("/oauth/token", new FormUrlEncodedContent(new Dictionary<string, string>
+        await using (var refreshedMcp = await factory.ConnectAsync(refreshed.GetProperty("access_token").GetString()))
         {
-            ["grant_type"] = "refresh_token",
-            ["refresh_token"] = refreshToken,
-            ["client_id"] = clientId,
-        }));
+            Assert.NotEqual(true, (await refreshedMcp.CallToolAsync("whoami")).IsError);
+        }
+
+        // 8. A retry with the old refresh token within the grace period (concurrent refresh, lost response)
+        //    gets the same new tokens instead of signing the user out
+        var retried = await Token(browser, Refresh(refreshToken, clientId));
+        Assert.Equal(newRefreshToken, retried.GetProperty("refresh_token").GetString());
+        Assert.Equal(refreshed.GetProperty("access_token").GetString(), retried.GetProperty("access_token").GetString());
+
+        // 9. After the grace period the old refresh token is rejected; the current one keeps rotating
+        factory.Clock.Advance(TimeSpan.FromSeconds(31));
+        var reused = await browser.PostAsync("/oauth/token", new FormUrlEncodedContent(Refresh(refreshToken, clientId)));
         Assert.Equal(HttpStatusCode.BadRequest, reused.StatusCode);
+
+        var next = await Token(browser, Refresh(newRefreshToken, clientId));
+        Assert.NotEqual(newRefreshToken, next.GetProperty("refresh_token").GetString());
+        factory.Clock.Reset();
     }
+
+    [Fact]
+    public async Task Refresh_with_an_unknown_token_is_rejected()
+    {
+        var browser = Browser();
+        var registration = await (await browser.PostAsJsonAsync("/oauth/register", new { redirect_uris = new[] { RedirectUri }, token_endpoint_auth_method = "none" }))
+            .Content.ReadFromJsonAsync<JsonElement>();
+
+        var response = await browser.PostAsync("/oauth/token", new FormUrlEncodedContent(Refresh("made-up", registration.GetProperty("client_id").GetString()!)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("invalid_grant", await response.Content.ReadAsStringAsync());
+    }
+
+    private static Dictionary<string, string> Refresh(string refreshToken, string clientId) => new()
+    {
+        ["grant_type"] = "refresh_token",
+        ["refresh_token"] = refreshToken,
+        ["client_id"] = clientId,
+    };
 
     [Fact]
     public async Task Wrong_pkce_verifier_is_rejected()

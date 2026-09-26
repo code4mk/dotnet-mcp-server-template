@@ -43,6 +43,12 @@ public sealed record UserSession(
 
 public sealed record RefreshTokenEntry(string SessionId, string ClientId, IReadOnlyList<string> Scopes);
 
+/// <summary>
+/// A refresh token that was just rotated: for AUTH_REFRESH_REUSE_SECONDS it answers again with the same response
+/// (encrypted), so a concurrent refresh or a retry after a lost response doesn't sign the user out.
+/// </summary>
+public sealed record RotatedRefreshToken(string ClientId, DateTimeOffset RotatedAt, string EncryptedResponse);
+
 /// <summary>IdP tokens kept on the server (never sent to MCP clients).</summary>
 public sealed record UpstreamTokens(string AccessToken, string? RefreshToken, DateTimeOffset? ExpiresAt);
 

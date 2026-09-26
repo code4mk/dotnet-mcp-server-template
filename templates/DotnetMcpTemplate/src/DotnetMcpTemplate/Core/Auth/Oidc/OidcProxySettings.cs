@@ -15,9 +15,21 @@ public sealed class OidcProxySettings : IValidatableObject
     [Range(1, 1440)]
     public int TokenLifetimeMinutes { get; init; } = 60;
 
+    /// <summary>
+    /// How long a user stays signed in without using the server. Every refresh starts the period again, so an active
+    /// user never has to sign in again.
+    /// </summary>
     [ConfigurationKeyName("AUTH_REFRESH_TOKEN_LIFETIME_DAYS")]
     [Range(1, 365)]
     public int RefreshTokenLifetimeDays { get; init; } = 30;
+
+    /// <summary>
+    /// Refresh tokens rotate (single use). For this many seconds after a refresh, the old refresh token returns the same
+    /// new tokens again, so concurrent refreshes and retries after a lost response don't sign the user out. 0 = off.
+    /// </summary>
+    [ConfigurationKeyName("AUTH_REFRESH_REUSE_SECONDS")]
+    [Range(0, 300)]
+    public int RefreshReuseSeconds { get; init; } = 30;
 
     /// <summary>Redirect URIs MCP clients may register, comma-separated. * is allowed in port and path.</summary>
     [ConfigurationKeyName("AUTH_ALLOWED_REDIRECT_URIS")]
@@ -29,15 +41,22 @@ public sealed class OidcProxySettings : IValidatableObject
     [Range(0, 365)]
     public int ConsentRememberDays { get; init; } = 30;
 
-    /// <summary>How long a dynamic client registration is kept.</summary>
+    /// <summary>How long an unused dynamic client registration is kept. Every token request extends it.</summary>
     [ConfigurationKeyName("AUTH_CLIENT_REGISTRATION_DAYS")]
     [Range(1, 3650)]
     public int ClientRegistrationDays { get; init; } = 90;
 
-    /// <summary>memory (single instance) | redis (several instances share logins).</summary>
+    /// <summary>
+    /// Where sign-ins are kept. file: on disk, survives restarts (one instance). redis: shared by several instances.
+    /// memory: lost on every restart (tests).
+    /// </summary>
     [ConfigurationKeyName("AUTH_STORE")]
-    [AllowedValues("memory", "redis")]
-    public string Store { get; init; } = "memory";
+    [AllowedValues("file", "redis", "memory")]
+    public string Store { get; init; } = "file";
+
+    /// <summary>Folder for AUTH_STORE=file, relative to the working directory. Keep it out of git and on a volume in Docker.</summary>
+    [ConfigurationKeyName("AUTH_STORE_PATH")]
+    public string StorePath { get; init; } = ".data/auth";
 
     [ConfigurationKeyName("REDIS_URL")]
     public string? RedisUrl { get; init; }
@@ -49,6 +68,11 @@ public sealed class OidcProxySettings : IValidatableObject
         if (Store == "redis" && string.IsNullOrWhiteSpace(RedisUrl))
         {
             yield return new ValidationResult("REDIS_URL: required when AUTH_STORE=redis.");
+        }
+
+        if (Store == "file" && string.IsNullOrWhiteSpace(StorePath))
+        {
+            yield return new ValidationResult("AUTH_STORE_PATH: required when AUTH_STORE=file.");
         }
     }
 }

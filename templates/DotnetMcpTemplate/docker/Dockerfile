@@ -23,8 +23,10 @@ RUN dotnet publish src/DotnetMcpTemplate/DotnetMcpTemplate.csproj -c Release --n
 # ---------- runtime ----------
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-ENV APP_PORT=8080 DOTNET_RUNNING_IN_CONTAINER=true
+ENV APP_PORT=8080 DOTNET_RUNNING_IN_CONTAINER=true AUTH_STORE_PATH=/data/auth
 COPY --from=build /app .
+# Sign-ins (AUTH_STORE=file) live in /data: mount a volume there so they survive container re-creation.
+RUN mkdir -p /data/auth && chown -R $APP_UID /data && chmod 700 /data/auth
 USER $APP_UID
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "DotnetMcpTemplate.dll"]

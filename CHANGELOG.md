@@ -14,9 +14,13 @@ First release.
 - **Validation** of every tool and prompt call (data annotations, nested objects, `IValidatableObject`), returned as
   errors the model can fix.
 - **Auth:** OIDC proxy for any OIDC identity provider (dynamic client registration, PKCE, ID token + userinfo merge,
-  rotating refresh tokens, encrypted IdP tokens, memory or Redis store), consent page in the style of the FastMCP
-  OAuth proxy, `jwt` resource-server provider, extensible `IAuthProvider`, dev mode. Scopes are defined in code
-  (`Core/Auth/AppScopes.cs`); clients get only the scopes they request.
+  encrypted IdP tokens), consent page in the style of the FastMCP OAuth proxy, `jwt` resource-server provider,
+  extensible `IAuthProvider`, dev mode. Scopes are defined in code (`Core/Auth/AppScopes.cs`); clients get only the
+  scopes they request.
+- **Users sign in once:** rotating refresh tokens renew expired access tokens; every refresh extends the session and
+  the client registration; a 30-second reuse window (`AUTH_REFRESH_REUSE_SECONDS`) makes concurrent refreshes and
+  retries safe; sign-ins are stored in files by default (`AUTH_STORE=file`, a `/data` volume in Docker) so restarts
+  and deploys don't sign anyone out, or in Redis for several instances.
 - **MCP Apps UI** (`ui/`): ext-apps 2, React 19, Vite 8, Tailwind 4. One folder per view, shared host connection
   (`useToolOutput`, `useCallTool`, `useMcpApp`), host theme tokens, zod-validated tool outputs, failed / cancelled
   results shown in the view, dev sandbox with sample data (left out of production bundles), per-entry or full

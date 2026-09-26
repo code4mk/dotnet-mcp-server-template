@@ -13,6 +13,9 @@ TestResults/
 .env.*
 !.env.example
 
+# Local data: AUTH_STORE=file sign-ins
+.data/
+
 # UI workspace
 ui/node_modules/
 ui/dist/

@@ -37,7 +37,7 @@
         {
           "exclude": [
             "**/[Bb]in/**", "**/[Oo]bj/**", "**/.vs/**", "**/.idea/**", "**/*.user",
-            "**/TestResults/**", ".git/**", ".template.config/**", ".env",
+            "**/TestResults/**", ".git/**", ".template.config/**", ".env", ".data/**",
             "ui/node_modules/**", "ui/dist/**"
           ]
         }

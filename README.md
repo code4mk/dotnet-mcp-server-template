@@ -21,8 +21,9 @@ Built on the official [MCP C# SDK](https://github.com/modelcontextprotocol/cshar
 **Remote MCP servers need real OAuth, and that's the hard part.** MCP clients such as Claude expect OAuth 2.1 with
 dynamic client registration, PKCE, and protected resource metadata. Most identity providers (Entra ID, Google,
 Okta, ...) don't offer dynamic registration. This template ships an **OIDC proxy** that makes any OIDC provider work
-with three settings, including the consent screen, encrypted token storage, rotating refresh tokens and Redis for
-multiple instances.
+with three settings, including the consent screen, encrypted token storage and Redis for multiple instances.
+**Users sign in once:** expired tokens renew silently with rotating refresh tokens, and sign-ins survive restarts and
+deploys.
 
 **Tools can show real UI, not just text.** [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) are wired
 end to end: React + Tailwind views that follow the host's theme, call your tools themselves (paging, drill-down),

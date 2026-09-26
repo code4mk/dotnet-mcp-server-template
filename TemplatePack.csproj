@@ -27,7 +27,7 @@
     <!-- NoDefaultExcludes packs dotfiles (.github, .gitignore, ...) but pack ignores .gitignore: exclude local-only
          files here. Never ship .env: it holds real credentials. .env.example is added back explicitly. -->
     <Content Include="templates/**/*"
-             Exclude="templates/**/bin/**;templates/**/obj/**;templates/**/.vs/**;templates/**/.idea/**;templates/**/TestResults/**;templates/**/node_modules/**;templates/**/ui/dist/**;templates/**/.env;templates/**/.env.*;templates/**/*.user;templates/**/.DS_Store;templates/**/Thumbs.db" />
+             Exclude="templates/**/bin/**;templates/**/obj/**;templates/**/.vs/**;templates/**/.idea/**;templates/**/TestResults/**;templates/**/node_modules/**;templates/**/ui/dist/**;templates/**/.env;templates/**/.env.*;templates/**/.data/**;templates/**/*.user;templates/**/.DS_Store;templates/**/Thumbs.db" />
     <Content Include="templates/**/.env.example" />
     <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>

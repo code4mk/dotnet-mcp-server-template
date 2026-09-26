@@ -47,8 +47,8 @@ cd ui && pnpm run watch                          # optional, second terminal: re
 | `ui/src/**` (with `pnpm run watch`) | Bundle rebuilt into `ui_dist/`; the next `resources/read` returns it, no restart |
 | `.env` | Read once at startup: press **Ctrl+R** in the `dotnet watch` terminal to restart |
 
-MCP clients reconnect on their own after a restart. With `AUTH_STORE=memory` a restart signs clients out; use
-`MCP_AUTH_MODE=none` while iterating, or `AUTH_STORE=redis` to keep logins.
+MCP clients reconnect on their own after a restart and stay signed in: sign-ins are kept in `.data/auth`
+(`AUTH_STORE=file`). Only `AUTH_STORE=memory` loses them on restart.
 
 ## Docker
 

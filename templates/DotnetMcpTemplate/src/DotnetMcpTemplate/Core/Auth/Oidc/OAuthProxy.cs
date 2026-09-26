@@ -302,13 +302,21 @@ public sealed class OAuthProxy(
         var session = await store.GetAsync<UserSession>(AuthStore.SessionKey(entry.SessionId), cancellationToken)
             ?? throw new OAuthException("invalid_grant", "The sign-in session has expired.");
 
+        await KeepClientAsync(client, cancellationToken);
         return await IssueAsync(session, client.ClientId, entry.Scopes, cancellationToken);
     }
 
+    // Refresh tokens rotate: each one is used once and answered with a new pair. The session and the client
+    // registration are extended on every refresh, so a user who keeps using the server never signs in again.
     private async Task<object> RefreshAsync(ClientRegistration client, IFormCollection form, CancellationToken cancellationToken)
     {
-        var entry = await store.TakeAsync<RefreshTokenEntry>(AuthStore.RefreshKey(form["refresh_token"].ToString()), cancellationToken)
-            ?? throw new OAuthException("invalid_grant", "The refresh token is invalid, expired or already used.");
+        var refreshToken = form["refresh_token"].ToString();
+        var entry = await store.TakeAsync<RefreshTokenEntry>(AuthStore.RefreshKey(refreshToken), cancellationToken);
+        if (entry is null)
+        {
+            return await ReplayRotationAsync(client, refreshToken, cancellationToken)
+                ?? throw new OAuthException("invalid_grant", "The refresh token is invalid, expired or already used.");
+        }
 
         if (entry.ClientId != client.ClientId)
         {
@@ -318,10 +326,42 @@ public sealed class OAuthProxy(
         var session = await store.GetAsync<UserSession>(AuthStore.SessionKey(entry.SessionId), cancellationToken)
             ?? throw new OAuthException("invalid_grant", "The sign-in session has expired. Sign in again.");
 
-        // Keep the session alive as long as it's used.
         await store.SetAsync(AuthStore.SessionKey(session.Id), session, TimeSpan.FromDays(proxy.RefreshTokenLifetimeDays), cancellationToken);
-        return await IssueAsync(session, client.ClientId, entry.Scopes, cancellationToken);
+        await KeepClientAsync(client, cancellationToken);
+        var response = await IssueAsync(session, client.ClientId, entry.Scopes, cancellationToken);
+
+        if (proxy.RefreshReuseSeconds > 0)
+        {
+            var rotated = new RotatedRefreshToken(client.ClientId, time.GetUtcNow(), crypto.Encrypt(JsonSerializer.Serialize(response)));
+            await store.SetAsync(AuthStore.RotatedKey(refreshToken), rotated, TimeSpan.FromSeconds(proxy.RefreshReuseSeconds), cancellationToken);
+        }
+
+        return response;
     }
+
+    /// <summary>The same answer again when a just-rotated refresh token comes back within AUTH_REFRESH_REUSE_SECONDS.</summary>
+    private async Task<object?> ReplayRotationAsync(ClientRegistration client, string refreshToken, CancellationToken cancellationToken)
+    {
+        if (proxy.RefreshReuseSeconds <= 0 || string.IsNullOrEmpty(refreshToken))
+        {
+            return null;
+        }
+
+        var rotated = await store.GetAsync<RotatedRefreshToken>(AuthStore.RotatedKey(refreshToken), cancellationToken);
+        if (rotated is null
+            || rotated.ClientId != client.ClientId
+            || time.GetUtcNow() - rotated.RotatedAt > TimeSpan.FromSeconds(proxy.RefreshReuseSeconds))
+        {
+            return null;
+        }
+
+        logger.LogInformation("Refresh token reused within the grace period by client {ClientId}; returning the same tokens", client.ClientId);
+        return JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(crypto.Decrypt(rotated.EncryptedResponse));
+    }
+
+    /// <summary>A registration in use never expires: each successful token request starts its lifetime again.</summary>
+    private Task KeepClientAsync(ClientRegistration client, CancellationToken cancellationToken) =>
+        store.SetAsync(AuthStore.ClientKey(client.ClientId), client, TimeSpan.FromDays(proxy.ClientRegistrationDays), cancellationToken);
 
     private async Task<object> IssueAsync(UserSession session, string clientId, IReadOnlyList<string> scopes, CancellationToken cancellationToken)
     {

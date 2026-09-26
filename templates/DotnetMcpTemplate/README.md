@@ -67,7 +67,7 @@ is reported by variable name.
 | `MCP_AUTH_MODE` | `required` | `required`, `mixed` or `none` (dev only) |
 | `AUTH_PROVIDER` | `oidc` | `oidc`, `jwt` or a custom provider |
 | `OIDC_*` | | Identity provider: discovery URL, client id and secret, scopes, claims |
-| `AUTH_*` | | Token signing key and lifetimes, allowed redirect URIs, store (`memory` or `redis`) |
+| `AUTH_*` | | Token signing key and lifetimes, allowed redirect URIs, sign-in store (`file`, `redis`, `memory`) |
 | `SAMPLE_API_*` | | Example external API client; one `{PREFIX}_*` set per API |
 
 Details: [configuration guide](docs/development/configuration-and-environments.md).
@@ -83,8 +83,12 @@ identity provider (Entra ID, Google, Auth0, Okta, Keycloak, Zitadel, ...):
 3. Connect a client: it registers, shows the consent page, and sends you to the identity provider to sign in.
 
 Tools, resources and prompts declare `[Authorize]` or `[AllowAnonymous]`. Scopes are defined in
-`Core/Auth/AppScopes.cs` and policies in `Core/Auth/Policies.cs`. For multiple instances set `AUTH_STORE=redis`,
-`REDIS_URL` and the same `AUTH_TOKEN_SIGNING_KEY` everywhere.
+`Core/Auth/AppScopes.cs` and policies in `Core/Auth/Policies.cs`.
+
+**Users sign in once.** Expired access tokens are renewed with rotating refresh tokens, every refresh extends the
+session, and sign-ins are stored in `.data/auth` (`AUTH_STORE=file`), so restarts and deploys don't sign anyone out.
+For multiple instances set `AUTH_STORE=redis`, `REDIS_URL` and the same `AUTH_TOKEN_SIGNING_KEY` everywhere. See
+[staying signed in](docs/development/authentication-and-authorization.md#staying-signed-in).
 
 Details: [authentication and authorization](docs/development/authentication-and-authorization.md).
 
@@ -267,7 +271,7 @@ HTTP. In production, terminate TLS at a reverse proxy and set `APP_URL` to the p
 | Login fails with `IDX20803: Unable to obtain configuration` | Open `OIDC_DISCOVERY_URL` in a browser: it must return JSON (note the dot in `/.well-known/`) |
 | Identity provider says the redirect URI is invalid | Register `${APP_URL}/oauth/callback` exactly, not `APP_URL` alone |
 | A client can't register (`invalid_redirect_uri`) | Add its redirect URI pattern to `AUTH_ALLOWED_REDIRECT_URIS` |
-| Clients are signed out after every restart | `AUTH_STORE=memory` keeps state in memory; use `redis` to persist it |
+| Users must sign in again after a restart | `AUTH_STORE=memory` loses sign-ins: use `file` (default) or `redis`; in Docker keep the `/data` volume |
 | `.env` changes have no effect under `dotnet watch` | Settings are read at startup: press Ctrl+R in the watch terminal |
 | `UI bundle not found at …/ui_dist/<entry>.html` | `cd ui && pnpm install && pnpm run build` |
 | CI fails on "Committed bundles match the source" | `cd ui && pnpm run build`, then commit `src/DotnetMcpTemplate/ui_dist/` |

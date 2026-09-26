@@ -18,6 +18,8 @@ merges userinfo, and issues its own short-lived JWT. Providers are pluggable thr
 
 ## Consequences
 
-- The proxy holds short-lived state (registrations, logins, sessions): in memory for one instance, Redis for many.
+- The proxy holds state (client registrations, sessions, refresh tokens): in files for one instance (survives
+  restarts), Redis for many. Refresh tokens rotate with a short reuse window, and every refresh extends the session,
+  so active users never sign in again.
 - A consent page is required (MCP security best practices: confused deputy).
 - `AUTH_TOKEN_SIGNING_KEY` is critical: it signs tokens and encrypts IdP tokens. Rotating it signs everyone out.

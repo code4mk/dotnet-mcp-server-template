@@ -14,11 +14,17 @@ services:
     env_file: ../.env
     environment:
       APP_PORT: ${APP_PORT:-5080}
+      AUTH_STORE_PATH: /data/auth   # on the volume below; wins over the local path in .env
     ports:
       - "${APP_PORT:-5080}:${APP_PORT:-5080}"
+    volumes:
+      - auth-data:/data   # AUTH_STORE=file: sign-ins survive restarts and re-deploys
     restart: unless-stopped
 
   # Uncomment for several instances (AUTH_STORE=redis, REDIS_URL=redis:6379).
   # redis:
   #   image: redis:7-alpine
   #   restart: unless-stopped
+
+volumes:
+  auth-data:
