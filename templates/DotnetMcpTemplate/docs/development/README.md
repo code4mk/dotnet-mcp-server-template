@@ -24,6 +24,7 @@ Read top to bottom when you're new; jump to a section when you have a task.
 | Guide | Covers |
 | --- | --- |
 | [API clients](api-clients.md) | Typed clients in `Integrations/`, `{PREFIX}_*` settings, auth modes, resilience |
+| [Redis](redis.md) | One shared connection, `REDIS_URL` formats, your own `IRedisConnectionFactory` (Azure, AWS, GCP, cluster, TLS) |
 
 ## 4. Secure it
 
@@ -44,6 +45,7 @@ Read top to bottom when you're new; jump to a section when you have a task.
 | --- | --- |
 | Add a tool | [Tools, resources and prompts → Adding a tool](tools-resources-prompts.md#adding-a-tool) |
 | Call an external API | [API clients](api-clients.md), then a service in `Services/` |
+| Share sign-ins across instances, or use Redis | [Redis](redis.md) |
 | Add a setting | [Configuration → Typed settings](configuration-and-environments.md#typed-settings) |
 | Require a scope or role | [Auth → Scopes](authentication-and-authorization.md#scopes) |
 | Show a UI for a tool | [MCP Apps](mcp-apps.md), then [Adding a view](../../ui/README.md#adding-a-view) |

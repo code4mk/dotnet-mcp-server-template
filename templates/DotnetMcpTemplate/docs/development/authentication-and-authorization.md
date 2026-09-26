@@ -54,7 +54,7 @@ Users sign in once. After that the client keeps them signed in on its own:
 | `AUTH_STORE` | Use for | Restarts / deploys |
 | --- | --- | --- |
 | `file` (default) | One instance | Kept, in `AUTH_STORE_PATH` (`.data/auth`; `/data/auth` on a volume in Docker) |
-| `redis` | Several instances (`REDIS_URL`) | Kept, and shared between instances |
+| `redis` | Several instances (`REDIS_URL` or your own connection factory, see [Redis](redis.md)) | Kept, and shared between instances |
 | `memory` | Tests | **Lost: every user signs in again** |
 
 Users are signed out when `AUTH_TOKEN_SIGNING_KEY` changes (it signs tokens and encrypts stored IdP tokens), when the

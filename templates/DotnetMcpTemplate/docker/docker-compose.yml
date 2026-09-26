@@ -21,10 +21,15 @@ services:
       - auth-data:/data   # AUTH_STORE=file: sign-ins survive restarts and re-deploys
     restart: unless-stopped
 
-  # Uncomment for several instances (AUTH_STORE=redis, REDIS_URL=redis:6379).
+  # Uncomment to share sign-ins between instances: set AUTH_STORE=redis and REDIS_URL=redis://redis:6379 in .env
+  # (docs/development/redis.md). The volume keeps sign-ins across Redis restarts.
   # redis:
   #   image: redis:7-alpine
+  #   command: ["redis-server", "--appendonly", "yes"]
+  #   volumes:
+  #     - redis-data:/data
   #   restart: unless-stopped
 
 volumes:
   auth-data:
+  # redis-data:

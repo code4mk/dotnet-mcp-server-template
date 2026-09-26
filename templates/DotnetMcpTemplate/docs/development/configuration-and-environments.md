@@ -37,4 +37,5 @@ API client are not marked; they are registered by that provider/client, so unuse
 | `AUTH_PROVIDER` | `oidc` | `oidc`, `jwt` or a custom provider |
 | `OIDC_*` | | Identity provider (see authentication-and-authorization.md) |
 | `AUTH_*` | | OAuth proxy: signing key, lifetimes, redirect URIs, store |
+| `REDIS_URL` | | Redis for `AUTH_STORE=redis` or your own use (see [Redis](redis.md)) |
 | `{PREFIX}_*` | | One set per API client (see api-clients.md) |

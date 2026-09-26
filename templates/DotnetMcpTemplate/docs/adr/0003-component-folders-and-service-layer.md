@@ -13,7 +13,7 @@ src/DotnetMcpTemplate/
 ├── Services/       Business rules
 ├── Models/         Request/response DTOs
 ├── Integrations/   One folder per external API: typed client + its models
-└── Core/           Plumbing: ApiClients (base), Auth, Mcp, Validation, Common, ServerInfo
+└── Core/           Plumbing: ApiClients (base), Auth, Mcp, Redis, Validation, Common, ServerInfo
 ```
 
 Calls flow in one direction:

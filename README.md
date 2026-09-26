@@ -66,11 +66,12 @@ Add the server in Claude (Settings → Connectors → Add custom connector) and 
 | **MCP Apps** | `ui/` workspace (React 19, Vite, Tailwind 4, ext-apps 2): one bundle per view, host theme, tool calls from the view, zod-validated outputs, sandbox preview, per-entry builds |
 | **Validation** | Data annotations and `IValidatableObject` on every tool and prompt call, nested objects included |
 | **Integrations** | Typed API clients from one line of registration; retries, circuit breaker, timeouts; `bearer`, `api_key`, `basic`, `client_credentials`, or the signed-in user's token |
+| **Redis** | Optional, for scale-out or your own caching: one shared StackExchange.Redis connection, `REDIS_URL` as URL or connection string (cluster, Sentinel, TLS), and one `IRedisConnectionFactory` to plug in any vendor (Azure Entra ID, AWS, GCP, certificates). Health-checked |
 | **Settings** | `.env` plus typed settings classes validated at startup, every problem listed by variable name |
 | **Dev loop** | `dotnet watch` with hot reload, `pnpm run watch` for views, dual-stack `localhost`, startup URL in the log |
-| **Tests** | Unit, integration (a real MCP client against the in-memory server, including the full OAuth flow against a fake IdP) and architecture rules: 64 tests out of the box |
+| **Tests** | Unit, integration (a real MCP client against the in-memory server, including the full OAuth flow against a fake IdP) and architecture rules: 80 tests out of the box |
 | **Ship** | Multi-stage Dockerfile, Compose, GitHub Actions (build, test, UI bundle check, Docker), pinned SDK, central package versions |
-| **Docs** | 10 guides organized by task, 4 architecture decision records |
+| **Docs** | 11 guides organized by task, 4 architecture decision records |
 
 ## Project layout
 

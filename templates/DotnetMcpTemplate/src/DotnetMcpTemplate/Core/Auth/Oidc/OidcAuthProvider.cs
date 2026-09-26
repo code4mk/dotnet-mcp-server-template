@@ -1,7 +1,9 @@
 using DotnetMcpTemplate.Core.Auth.Providers;
 using DotnetMcpTemplate.Core.Common.Settings;
+using DotnetMcpTemplate.Core.Redis;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 
@@ -28,11 +30,11 @@ public sealed class OidcAuthProvider : IAuthProvider
         var proxy = context.Configuration.ReadEnvSettings<OidcProxySettings>();
         if (proxy.Store == "redis")
         {
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = proxy.RedisUrl;
-                options.InstanceName = "mcp-auth:";
-            });
+            // The app's shared Redis connection: REDIS_URL by default, or your IRedisConnectionFactory.
+            services.AddAppRedis(context.Configuration);
+            services.AddStackExchangeRedisCache(options => options.InstanceName = "mcp-auth:");
+            services.AddOptions<RedisCacheOptions>()
+                .Configure<RedisConnection>((options, redis) => options.ConnectionMultiplexerFactory = redis.GetAsync);
         }
         else if (proxy.Store == "file")
         {

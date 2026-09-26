@@ -47,7 +47,8 @@ public sealed class OidcProxySettings : IValidatableObject
     public int ClientRegistrationDays { get; init; } = 90;
 
     /// <summary>
-    /// Where sign-ins are kept. file: on disk, survives restarts (one instance). redis: shared by several instances.
+    /// Where sign-ins are kept. file: on disk, survives restarts (one instance). redis: shared by several instances,
+    /// through the app's Redis connection (REDIS_URL or your IRedisConnectionFactory, see Core/Redis).
     /// memory: lost on every restart (tests).
     /// </summary>
     [ConfigurationKeyName("AUTH_STORE")]
@@ -58,18 +59,10 @@ public sealed class OidcProxySettings : IValidatableObject
     [ConfigurationKeyName("AUTH_STORE_PATH")]
     public string StorePath { get; init; } = ".data/auth";
 
-    [ConfigurationKeyName("REDIS_URL")]
-    public string? RedisUrl { get; init; }
-
     public IReadOnlyList<string> RedirectUriPatterns => AllowedRedirectUris.SplitList();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Store == "redis" && string.IsNullOrWhiteSpace(RedisUrl))
-        {
-            yield return new ValidationResult("REDIS_URL: required when AUTH_STORE=redis.");
-        }
-
         if (Store == "file" && string.IsNullOrWhiteSpace(StorePath))
         {
             yield return new ValidationResult("AUTH_STORE_PATH: required when AUTH_STORE=file.");

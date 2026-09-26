@@ -25,6 +25,9 @@ First release.
   (`useToolOutput`, `useCallTool`, `useMcpApp`), host theme tokens, zod-validated tool outputs, failed / cancelled
   results shown in the view, dev sandbox with sample data (left out of production bundles), per-entry or full
   builds. Sample `projects-dashboard` with drill-down through `list_projects`.
+- **Redis** (optional): one shared StackExchange.Redis 3 connection for the auth store and your own code;
+  `REDIS_URL` as a `redis://` / `rediss://` URL or a connection string (cluster, Sentinel, TLS); `IRedisConnectionFactory`
+  to connect any vendor with code (Azure Entra ID, AWS, GCP, client certificates); `redis` check in `GET /health`.
 - **Typed API clients** (`ApiClient` base) with env-configured auth (`bearer`, `api_key`, `basic`,
   `client_credentials`, user token), retries, circuit breaker, timeouts, correlation ids.
 - **Settings:** `.env` (DotNetEnv) plus typed settings validated at startup; `APP_PORT`, `APP_URL`; dual-stack
@@ -34,4 +37,4 @@ First release.
   architecture tests.
 - **Ship:** multi-stage Dockerfile (optional UI build), Compose, GitHub Actions (build, test, UI bundle check,
   Docker), `global.json`, central package management.
-- **Docs:** 10 guides indexed by task (`docs/development/README.md`) and 4 ADRs.
+- **Docs:** 11 guides indexed by task (`docs/development/README.md`) and 4 ADRs.

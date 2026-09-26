@@ -15,6 +15,11 @@ public static class IntegrationsSetup
         services.AddApiClient<ISampleApiClient, SampleApiClient>(configuration, SampleApiClient.Prefix);
         // services.AddApiClient<ICrmClient, CrmClient>(configuration, "CRM");
 
+        // Redis (docs/development/redis.md). AUTH_STORE=redis registers it already; add it for your own caching, locks...
+        // services.AddAppRedis(configuration);
+        // Your vendor's connection (Azure Entra ID, AWS, GCP, cluster, certificates) instead of the REDIS_URL default:
+        // services.AddRedisConnectionFactory<MyRedisConnectionFactory>();
+
         return services;
     }
 }

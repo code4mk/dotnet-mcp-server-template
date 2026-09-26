@@ -68,6 +68,7 @@ is reported by variable name.
 | `AUTH_PROVIDER` | `oidc` | `oidc`, `jwt` or a custom provider |
 | `OIDC_*` | | Identity provider: discovery URL, client id and secret, scopes, claims |
 | `AUTH_*` | | Token signing key and lifetimes, allowed redirect URIs, sign-in store (`file`, `redis`, `memory`) |
+| `REDIS_URL` | | Redis: URL or connection string (cluster, Sentinel, TLS). Or write your own connection factory |
 | `SAMPLE_API_*` | | Example external API client; one `{PREFIX}_*` set per API |
 
 Details: [configuration guide](docs/development/configuration-and-environments.md).
@@ -87,7 +88,8 @@ Tools, resources and prompts declare `[Authorize]` or `[AllowAnonymous]`. Scopes
 
 **Users sign in once.** Expired access tokens are renewed with rotating refresh tokens, every refresh extends the
 session, and sign-ins are stored in `.data/auth` (`AUTH_STORE=file`), so restarts and deploys don't sign anyone out.
-For multiple instances set `AUTH_STORE=redis`, `REDIS_URL` and the same `AUTH_TOKEN_SIGNING_KEY` everywhere. See
+For multiple instances set `AUTH_STORE=redis` ([Redis guide](docs/development/redis.md)) and the same `AUTH_TOKEN_SIGNING_KEY`
+everywhere. See
 [staying signed in](docs/development/authentication-and-authorization.md#staying-signed-in).
 
 Details: [authentication and authorization](docs/development/authentication-and-authorization.md).
@@ -190,6 +192,7 @@ Patterns (host connection, schemas, errors, theming): [ui/README.md](ui/README.m
 │   │   ├── ApiClients/     ApiClient base, registration, resilience, auth handlers
 │   │   ├── Auth/           Providers (OIDC proxy, JWT, dev), scopes, policies, AppUser
 │   │   ├── Mcp/            Server setup, handler registry, Filters/ (logging, errors), Apps/ (bundles)
+│   │   ├── Redis/          Shared Redis connection, IRedisConnectionFactory (your vendor), health check
 │   │   ├── Validation/     Argument validation for every call
 │   │   ├── Common/         Settings/ (.env, typed settings), Errors/, Middleware/
 │   │   └── ServerInfo/     GET /
