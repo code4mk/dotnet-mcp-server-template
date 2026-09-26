@@ -135,8 +135,7 @@ dotnet new code4mk-mcp -n Sample.Mcp -o ../sample-mcp     # always create projec
 - `DotnetMcpTemplate` (and `dotnetmcptemplate-slug`) are placeholders; keep them. Package versions live in
   `templates/DotnetMcpTemplate/Directory.Packages.props`.
 - CI creates a project from the template, builds and tests it, checks the UI bundles, and packs the template.
-- Release: update `CHANGELOG.md`, then `git tag v1.1.0 && git push origin v1.1.0`; the publish workflow pushes to
-  nuget.org (secret `NUGET_API_KEY`).
+- Changing, testing and publishing the template: [nuget-publish.md](https://github.com/code4mk/dotnet-mcp-server-template/blob/main/nuget-publish.md).
 
 ## License
 
