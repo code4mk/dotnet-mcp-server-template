@@ -49,8 +49,8 @@ public sealed class InvoiceToolTests(McpServerFactory factory) : IClassFixture<M
 }
 ```
 
-- **Auth:** `AUTH_PROVIDER=test` accepts `Bearer test|{userId}|{scopes}|{roles}`. Build tokens with
-  `TestAuthProvider.Token("alice", scopes: "mcp:tools projects:write", roles: "admin")`; `null` connects anonymously.
+- **Auth:** `AUTH_PROVIDER=test` accepts `Bearer test|{userId}|{scopes}`. Build tokens with
+  `TestAuthProvider.Token("alice", scopes: "mcp:tools projects:write")`; `null` connects anonymously.
 - **Fakes:** override `ConfigureTestServices` in a factory subclass to replace more services.
 - **Settings:** pass overrides to the protected `McpServerFactory(overrides)` constructor (see
   `OidcProxyServerFactory`, which runs the whole OAuth flow against `FakeIdentityProvider`).

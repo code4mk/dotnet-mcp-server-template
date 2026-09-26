@@ -29,11 +29,16 @@ Flow: the MCP client gets `401` + `resource_metadata` → reads `/.well-known/oa
 IdP login → `/oauth/callback` (the server validates the ID token, calls userinfo, merges claims, stores the IdP tokens
 encrypted) → the client exchanges the code at `/oauth/token` for the **server's** token.
 
-The server token contains `sub`, `name`, `email`, `picture`, `preferred_username`, `roles` (from `OIDC_ROLE_CLAIM`,
-dot paths allowed), `groups`, granted `scope`, and any `OIDC_TOKEN_CLAIMS`. Inject `AppUser` to read them.
+The server token contains `sub`, `name`, `email`, `picture`, `preferred_username`, the granted `scope`, and any IdP
+claims listed in `OIDC_TOKEN_CLAIMS`. Inject `AppUser` to read them.
 
-Security properties: PKCE S256 on both legs, exact redirect URI match, registration limited to
-`AUTH_ALLOWED_REDIRECT_URIS`, consent per client (remembered `AUTH_CONSENT_REMEMBER_DAYS`), CSRF-protected consent,
+**Any MCP client can connect.** Clients register themselves (dynamic client registration); there is no allow-list.
+A redirect URI is refused only when it's unsafe for OAuth: it must be `https`, `http` on a loopback host
+(`localhost`, `127.0.0.1`, `[::1]`), or an app scheme such as `cursor://`, and never `javascript:`, `data:`, `file:`,
+user info or a fragment. The consent page shows each new client and exactly where its credentials will be sent.
+
+Security properties: PKCE S256 on both legs, exact redirect URI match, safe redirect URIs only, consent per client
+(remembered `AUTH_CONSENT_REMEMBER_DAYS`), CSRF-protected consent,
 single-use codes (5 min), rotating single-use refresh tokens, audience-bound tokens (RFC 8707), `iss` in the
 authorization response (RFC 9207), codes/tokens stored by hash, IdP tokens encrypted (AES-GCM).
 
@@ -67,12 +72,12 @@ The store holds client registrations, sessions (user claims, encrypted IdP token
 ## Provider `jwt`
 
 For IdPs that support MCP clients directly and issue JWT access tokens for your MCP URL: the server only validates
-tokens (`OIDC_DISCOVERY_URL`, `OIDC_AUDIENCE`, `OIDC_ROLE_CLAIM`).
+tokens (`OIDC_DISCOVERY_URL`, `OIDC_AUDIENCE`). The IdP's claims arrive as they are, in `AppUser.Claims`.
 
 ## Authorization
 
 - `[Authorize]`: any signed-in user. `[AllowAnonymous]`: public (useful with `mixed`).
-- Policies in `Core/Auth/Policies.cs`: `Policies.ProjectsWrite` (scope), `Policies.Admin` (role). Add your own there.
+- Policies in `Core/Auth/Policies.cs`: `Policies.ProjectsWrite` (scope). Add your own there.
 - Scopes are read from `scope` and `scp` in any format, so policies work with every IdP.
 
 ## Scopes
@@ -85,5 +90,21 @@ permissions, so tools behind a scope policy refuse it. To add a scope:
 2. Add a policy for it in `Policies.cs`.
 3. Use it: `[Authorize(Policy = Policies.YourScope)]`.
 
-Roles (`[Authorize(Roles = ...)]`, `Policies.Admin`) come from the IdP through `OIDC_ROLE_CLAIM`, not from scopes.
-With `MCP_AUTH_MODE=none` the developer user has every scope and the `admin` role.
+With `MCP_AUTH_MODE=none` the developer user has every scope.
+
+## Roles, groups and other IdP claims
+
+Every identity provider names and shapes these differently (`roles`, `groups`, `cognito:groups`, `realm_access`,
+app roles, ...), so the template maps none of them. Scopes above are the server's own and work the same with every
+IdP. When you do need an IdP claim, you decide which one:
+
+1. Copy it into the server token: `OIDC_TOKEN_CLAIMS=roles` (comma-separated, top-level claim names).
+2. Require it in a policy in `Policies.cs`, or read it in code:
+
+```csharp
+.AddPolicy("admin", policy => policy.RequireAuthenticatedUser().RequireClaim("roles", "admin"))
+
+if (user.ClaimValues("roles").Contains("admin")) { ... }
+```
+
+With the `jwt` provider the IdP's claims are already in the token; skip step 1.

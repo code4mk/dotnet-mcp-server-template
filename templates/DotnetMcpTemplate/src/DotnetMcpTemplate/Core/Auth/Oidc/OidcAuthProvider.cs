@@ -74,7 +74,6 @@ public sealed class OidcAuthProvider : IAuthProvider
                     IssuerSigningKey = crypto.AccessTokenKey,
                     ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                     NameClaimType = AppClaims.Name,
-                    RoleClaimType = AppClaims.Roles,
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
             });

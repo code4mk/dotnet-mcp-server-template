@@ -9,8 +9,6 @@ public static class AppClaims
     public const string EmailVerified = "email_verified";
     public const string PreferredUsername = "preferred_username";
     public const string Picture = "picture";
-    public const string Roles = "roles";
-    public const string Groups = "groups";
     public const string Scope = "scope";
     public const string EntraScope = "scp";
     public const string ClientId = "client_id";

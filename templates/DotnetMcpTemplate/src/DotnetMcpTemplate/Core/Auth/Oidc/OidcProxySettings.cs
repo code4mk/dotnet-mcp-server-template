@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using DotnetMcpTemplate.Core.Common.Settings;
 
 namespace DotnetMcpTemplate.Core.Auth.Oidc;
 
@@ -31,11 +30,6 @@ public sealed class OidcProxySettings : IValidatableObject
     [Range(0, 300)]
     public int RefreshReuseSeconds { get; init; } = 30;
 
-    /// <summary>Redirect URIs MCP clients may register, comma-separated. * is allowed in port and path.</summary>
-    [ConfigurationKeyName("AUTH_ALLOWED_REDIRECT_URIS")]
-    [Required]
-    public string AllowedRedirectUris { get; init; } = "http://localhost:*,http://127.0.0.1:*";
-
     /// <summary>Remember consent per client for N days (0 = always ask).</summary>
     [ConfigurationKeyName("AUTH_CONSENT_REMEMBER_DAYS")]
     [Range(0, 365)]
@@ -58,8 +52,6 @@ public sealed class OidcProxySettings : IValidatableObject
     /// <summary>Folder for AUTH_STORE=file, relative to the working directory. Keep it out of git and on a volume in Docker.</summary>
     [ConfigurationKeyName("AUTH_STORE_PATH")]
     public string StorePath { get; init; } = ".data/auth";
-
-    public IReadOnlyList<string> RedirectUriPatterns => AllowedRedirectUris.SplitList();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

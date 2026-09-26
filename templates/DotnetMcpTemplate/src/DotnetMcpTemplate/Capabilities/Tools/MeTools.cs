@@ -10,6 +10,6 @@ namespace DotnetMcpTemplate.Capabilities.Tools;
 public sealed class MeTools
 {
     [McpServerTool(Name = "whoami", Title = "Who am I", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Returns the signed-in user: id, name, email, roles, groups, scopes and all identity claims.")]
+    [Description("Returns the signed-in user: id, name, email, scopes and all identity claims.")]
     public static AppUser WhoAmI(AppUser user) => user;
 }

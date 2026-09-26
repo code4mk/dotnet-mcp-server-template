@@ -1,63 +1,49 @@
-using System.Text.RegularExpressions;
+using System.Net;
 
 namespace DotnetMcpTemplate.Core.Auth.Oidc;
 
 /// <summary>
-/// Which redirect URIs MCP clients may register (AUTH_ALLOWED_REDIRECT_URIS).
-/// Patterns: exact URIs, or http(s) URIs with <c>*</c> as the port (<c>http://localhost:*</c>) or in the path
-/// (<c>https://app.example.com/callback/*</c>). The host is always matched exactly. Other schemes
-/// (<c>cursor://...</c>) may use <c>*</c> anywhere after the scheme.
+/// Which redirect URIs an MCP client may register. Any client can connect; only URIs that are unsafe for OAuth are
+/// refused (OAuth 2.1, RFC 8252):
+/// <list type="bullet">
+/// <item><c>https://</c> to any host (Claude, ChatGPT, web clients);</item>
+/// <item><c>http://</c> only on a loopback host (<c>localhost</c>, <c>127.0.0.1</c>, <c>[::1]</c>): desktop and CLI
+/// clients, MCP Inspector. Codes never travel in clear text over a network;</item>
+/// <item>app schemes such as <c>cursor://</c> or <c>vscode://</c> (native apps), except schemes a browser would run or
+/// read locally (<c>javascript:</c>, <c>data:</c>, <c>file:</c>, ...).</item>
+/// </list>
+/// No user info and no fragment. Protection against a malicious client comes from the consent page, which shows the
+/// exact redirect URI before anything is sent there, per client.
 /// </summary>
-public sealed class RedirectUriPolicy(OidcProxySettings settings)
+public sealed class RedirectUriPolicy
 {
+    private static readonly HashSet<string> BlockedSchemes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "javascript", "data", "file", "vbscript", "about", "blob", "filesystem", "view-source", "ws", "wss", "ftp",
+    };
+
     public bool IsAllowed(string candidate)
     {
         if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri)
             || !string.IsNullOrEmpty(uri.UserInfo)
-            || !string.IsNullOrEmpty(uri.Fragment))
+            || !string.IsNullOrEmpty(uri.Fragment)
+            || candidate.Contains('#'))
         {
             return false;
         }
 
-        return settings.RedirectUriPatterns.Any(pattern => Matches(pattern, uri, candidate));
+        return uri.Scheme.ToLowerInvariant() switch
+        {
+            "https" => !string.IsNullOrEmpty(uri.Host),
+            "http" => IsLoopback(uri.Host),
+            var scheme => !BlockedSchemes.Contains(scheme),
+        };
     }
 
-    private static bool Matches(string pattern, Uri uri, string candidate)
-    {
-        if (!pattern.Contains('*'))
-        {
-            return string.Equals(pattern, candidate, StringComparison.Ordinal);
-        }
+    /// <summary>Why a URI was refused, for the registration error.</summary>
+    public const string Rules = "Redirect URIs must be https, http on localhost / 127.0.0.1 / [::1], or an app scheme (e.g. cursor://).";
 
-        var http = Regex.Match(pattern, "^(https?)://([^/:*]+)(?::(\\*|\\d+))?(/.*)?$", RegexOptions.IgnoreCase);
-        if (!http.Success)
-        {
-            // Custom scheme: glob after the scheme, same scheme required.
-            var scheme = pattern.Split("://", 2)[0];
-            return string.Equals(scheme, uri.Scheme, StringComparison.OrdinalIgnoreCase) && Glob(pattern).IsMatch(candidate);
-        }
-
-        if (!string.Equals(http.Groups[1].Value, uri.Scheme, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(http.Groups[2].Value, uri.Host, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        var port = http.Groups[3].Value;
-        if (port.Length > 0 && port != "*" && port != uri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture))
-        {
-            return false;
-        }
-
-        if (port.Length == 0 && !uri.IsDefaultPort)
-        {
-            return false;
-        }
-
-        var path = http.Groups[4].Success ? http.Groups[4].Value : null;
-        return path is null || Glob(path).IsMatch(uri.PathAndQuery);
-    }
-
-    private static Regex Glob(string pattern) =>
-        new("^" + Regex.Escape(pattern).Replace("\\*", ".*", StringComparison.Ordinal) + "$", RegexOptions.CultureInvariant);
+    private static bool IsLoopback(string host) =>
+        host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+        || (IPAddress.TryParse(host.Trim('[', ']'), out var address) && IPAddress.IsLoopback(address));
 }

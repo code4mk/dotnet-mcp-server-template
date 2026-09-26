@@ -25,11 +25,10 @@ internal sealed class DevAuthenticationHandler(
             new(AppClaims.Email, "dev@localhost"),
             new(AppClaims.PreferredUsername, "dev"),
             new(AppClaims.Scope, string.Join(' ', AppScopes.All)),
-            new(AppClaims.Roles, Policies.Admin),
             new(AppClaims.IdentityProvider, "dev"),
         };
 
-        var identity = new ClaimsIdentity(claims, SchemeName, AppClaims.Name, AppClaims.Roles);
+        var identity = new ClaimsIdentity(claims, SchemeName, AppClaims.Name, ClaimTypes.Role);
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName)));
     }
 }

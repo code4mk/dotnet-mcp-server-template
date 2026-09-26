@@ -30,7 +30,7 @@ Read top to bottom when you're new; jump to a section when you have a task.
 
 | Guide | Covers |
 | --- | --- |
-| [Authentication and authorization](authentication-and-authorization.md) | Auth modes, the OIDC proxy, `jwt` provider, policies, scopes, roles, troubleshooting |
+| [Authentication and authorization](authentication-and-authorization.md) | Auth modes, the OIDC proxy, any MCP client, `jwt` provider, policies, scopes, IdP claims, troubleshooting |
 | [Custom auth providers](custom-auth-providers.md) | Implement `IAuthProvider` for anything else |
 
 ## 5. Keep it correct
@@ -47,7 +47,8 @@ Read top to bottom when you're new; jump to a section when you have a task.
 | Call an external API | [API clients](api-clients.md), then a service in `Services/` |
 | Share sign-ins across instances, or use Redis | [Redis](redis.md) |
 | Add a setting | [Configuration → Typed settings](configuration-and-environments.md#typed-settings) |
-| Require a scope or role | [Auth → Scopes](authentication-and-authorization.md#scopes) |
+| Require a scope | [Auth → Scopes](authentication-and-authorization.md#scopes) |
+| Use IdP roles or groups | [Auth → Roles, groups and other IdP claims](authentication-and-authorization.md#roles-groups-and-other-idp-claims) |
 | Show a UI for a tool | [MCP Apps](mcp-apps.md), then [Adding a view](../../ui/README.md#adding-a-view) |
 | Fix a login problem | [Auth → Default provider](authentication-and-authorization.md#default-provider-oidc-proxy-auth_provideroidc) |
 | Test a tool with auth | [Testing → Integration tests](testing.md#integration-tests-the-server-as-a-client-sees-it) |

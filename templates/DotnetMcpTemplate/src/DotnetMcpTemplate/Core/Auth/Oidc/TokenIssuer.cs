@@ -17,7 +17,6 @@ public sealed class TokenIssuer(
     OidcProxySettings proxy,
     AppSettings app,
     McpSettings mcp,
-    ClaimsMerger merger,
     TimeProvider time)
 {
     private static readonly string[] StandardClaims =
@@ -51,16 +50,6 @@ public sealed class TokenIssuer(
             {
                 claims[name] = JsonSerializer.SerializeToElement(value);
             }
-        }
-
-        if (merger.Roles(merged) is { Count: > 0 } roles)
-        {
-            claims[AppClaims.Roles] = roles.ToArray();
-        }
-
-        if (merger.Groups(merged) is { Count: > 0 } groups)
-        {
-            claims[AppClaims.Groups] = groups.ToArray();
         }
 
         return _handler.CreateToken(new SecurityTokenDescriptor

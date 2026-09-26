@@ -38,7 +38,6 @@ public sealed class JwtAuthProvider : IAuthProvider
                     ValidAudiences = jwt.Audiences(context.ResourceUrl),
                     ValidateLifetime = true,
                     NameClaimType = AppClaims.Name,
-                    RoleClaimType = jwt.RoleClaim,
                 };
             });
 

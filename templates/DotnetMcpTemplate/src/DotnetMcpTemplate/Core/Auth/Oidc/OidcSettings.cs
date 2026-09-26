@@ -33,14 +33,10 @@ public sealed class OidcSettings : IValidatableObject
     [AllowedValues("auto", "always", "never")]
     public string UserInfo { get; init; } = "auto";
 
-    /// <summary>Claim with the user's roles. Dot paths read nested claims, e.g. realm_access.roles.</summary>
-    [ConfigurationKeyName("OIDC_ROLE_CLAIM")]
-    public string RoleClaim { get; init; } = "roles";
-
-    [ConfigurationKeyName("OIDC_GROUPS_CLAIM")]
-    public string GroupsClaim { get; init; } = "groups";
-
-    /// <summary>Extra IdP claims copied into server tokens, comma-separated (e.g. tenant_id,department).</summary>
+    /// <summary>
+    /// Extra IdP claims copied into server tokens, comma-separated (e.g. roles,groups,tenant_id). IdPs name these
+    /// differently, so none are copied by default; read them from <see cref="AppUser.Claims"/> or require them in a policy.
+    /// </summary>
     [ConfigurationKeyName("OIDC_TOKEN_CLAIMS")]
     public string? TokenClaims { get; init; }
 

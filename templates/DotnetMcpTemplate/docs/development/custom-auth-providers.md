@@ -22,7 +22,8 @@ public sealed class ApiKeyAuthProvider : IAuthProvider
 ```
 
 The template adds the MCP 401 challenge, the protected resource metadata, policies and `AppUser` on top.
-Write claims with the names in `AppClaims` (`sub`, `name`, `email`, `roles`, `scope`) so `AppUser` and policies work.
+Write claims with the names in `AppClaims` (`sub`, `name`, `email`, `scope`) so `AppUser` and policies work; any
+other claim is available in `AppUser.Claims`.
 
 Examples in the repository: `Core/Auth/Jwt/JwtAuthProvider.cs` (resource server) and
 `tests/.../TestInfrastructure/TestAuthProvider.cs` (header-based, for tests).

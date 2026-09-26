@@ -14,9 +14,6 @@ public sealed class JwtProviderSettings
     [ConfigurationKeyName("OIDC_AUDIENCE")]
     public string? Audience { get; init; }
 
-    [ConfigurationKeyName("OIDC_ROLE_CLAIM")]
-    public string RoleClaim { get; init; } = "roles";
-
     /// <summary>Issuer URL derived from the discovery URL (the part before /.well-known/).</summary>
     public string Issuer
     {

@@ -28,18 +28,21 @@ public sealed class AppUser
 
     public string? Picture { get; init; }
 
-    public IReadOnlyList<string> Roles { get; init; } = [];
-
-    public IReadOnlyList<string> Groups { get; init; } = [];
-
     public IReadOnlyList<string> Scopes { get; init; } = [];
 
-    /// <summary>Every claim of the token (arrays for repeated claims).</summary>
+    /// <summary>
+    /// Every claim of the token (arrays for repeated claims), including IdP claims copied with OIDC_TOKEN_CLAIMS
+    /// such as roles or groups.
+    /// </summary>
     public IReadOnlyDictionary<string, JsonElement> Claims { get; init; } = new Dictionary<string, JsonElement>();
 
-    public bool IsInRole(string role) => Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
-
     public bool HasScope(string scope) => Scopes.Contains(scope, StringComparer.Ordinal);
+
+    /// <summary>All values of a claim, e.g. <c>user.ClaimValues("roles")</c> after OIDC_TOKEN_CLAIMS=roles.</summary>
+    public IReadOnlyList<string> ClaimValues(string name) =>
+        !Claims.TryGetValue(name, out var value) ? []
+        : value.ValueKind == JsonValueKind.Array ? value.EnumerateArray().Select(v => v.ToString()).ToArray()
+        : [value.ToString()];
 
     public static AppUser FromPrincipal(ClaimsPrincipal? principal)
     {
@@ -49,7 +52,6 @@ public sealed class AppUser
         }
 
         string? First(string type) => principal.FindFirst(type)?.Value;
-        IReadOnlyList<string> All(string type) => principal.FindAll(type).Select(c => c.Value).Distinct(StringComparer.Ordinal).ToArray();
 
         var claims = principal.Claims
             .GroupBy(c => c.Type, StringComparer.Ordinal)
@@ -68,8 +70,6 @@ public sealed class AppUser
             Email = First(AppClaims.Email),
             Username = First(AppClaims.PreferredUsername),
             Picture = First(AppClaims.Picture),
-            Roles = All(AppClaims.Roles),
-            Groups = All(AppClaims.Groups),
             Scopes = ScopeAuthorizationHandler.ReadScopes(principal),
             Claims = claims,
         };

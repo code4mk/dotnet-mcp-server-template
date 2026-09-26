@@ -28,10 +28,23 @@ public sealed partial class OidcProxyFlowTests(OidcProxyServerFactory factory) :
         Assert.Contains("S256", metadata.GetProperty("code_challenge_methods_supported").EnumerateArray().Select(e => e.GetString()));
     }
 
-    [Fact]
-    public async Task Registration_rejects_unlisted_redirect_uris()
+    [Theory]
+    [InlineData("https://claude.ai/api/mcp/auth_callback")]
+    [InlineData("https://some-new-client.example.com/oauth/callback")]
+    [InlineData("cursor://anysphere.cursor-retrieval/oauth/callback")]
+    public async Task Any_mcp_client_can_register(string redirectUri)
     {
-        var response = await Browser().PostAsJsonAsync("/oauth/register", new { redirect_uris = new[] { "https://evil.example.com/cb" }, token_endpoint_auth_method = "none" });
+        var response = await Browser().PostAsJsonAsync("/oauth/register", new { redirect_uris = new[] { redirectUri }, token_endpoint_auth_method = "none" });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("http://evil.example.com/cb")]
+    [InlineData("javascript:alert(1)")]
+    public async Task Registration_rejects_unsafe_redirect_uris(string redirectUri)
+    {
+        var response = await Browser().PostAsJsonAsync("/oauth/register", new { redirect_uris = new[] { redirectUri }, token_endpoint_auth_method = "none" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("invalid_redirect_uri", await response.Content.ReadAsStringAsync());
@@ -110,7 +123,11 @@ public sealed partial class OidcProxyFlowTests(OidcProxyServerFactory factory) :
         Assert.Contains(FakeIdentityProvider.Subject, text);
         Assert.Contains("Alice Example", text);   // userinfo wins over the ID token's "Alice"
         Assert.Contains("Research", text);        // OIDC_TOKEN_CLAIMS=department
-        Assert.Contains("admin", text);           // roles from userinfo
+        Assert.Contains("admin", text);           // IdP roles, copied with OIDC_TOKEN_CLAIMS=roles
+
+        // Copied array claims are one claim per value, so policies can use RequireClaim("roles", "admin")
+        var roleClaims = new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(accessToken).Claims.Where(c => c.Type == "roles");
+        Assert.Equal(["admin"], roleClaims.Select(c => c.Value));
 
         // 7. An expired access token is replaced with the refresh token, no sign-in; the new token works
         factory.Clock.Reset();

@@ -74,7 +74,7 @@ public sealed class OAuthProxy(
         var rejected = redirectUris.FirstOrDefault(uri => !redirectPolicy.IsAllowed(uri));
         if (rejected is not null)
         {
-            throw new OAuthException("invalid_redirect_uri", $"Redirect URI '{rejected}' is not allowed by this server.");
+            throw new OAuthException("invalid_redirect_uri", $"Redirect URI '{rejected}' is not allowed. {RedirectUriPolicy.Rules}");
         }
 
         var method = request.TokenEndpointAuthMethod ?? "client_secret_basic";   // RFC 7591 default

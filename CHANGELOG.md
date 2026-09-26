@@ -15,8 +15,10 @@ First release.
   errors the model can fix.
 - **Auth:** OIDC proxy for any OIDC identity provider (dynamic client registration, PKCE, ID token + userinfo merge,
   encrypted IdP tokens), consent page in the style of the FastMCP OAuth proxy, `jwt` resource-server provider,
-  extensible `IAuthProvider`, dev mode. Scopes are defined in code (`Core/Auth/AppScopes.cs`); clients get only the
-  scopes they request.
+  extensible `IAuthProvider`, dev mode. Any MCP client can register: no redirect URI allow-list, only redirect URIs
+  unsafe for OAuth are refused (non-loopback `http`, `javascript:`, `data:`, `file:`). Scopes are defined in code
+  (`Core/Auth/AppScopes.cs`); clients get only the scopes they request. No IdP-specific role or group mapping: copy
+  any IdP claim with `OIDC_TOKEN_CLAIMS` and use it in a policy.
 - **Users sign in once:** rotating refresh tokens renew expired access tokens; every refresh extends the session and
   the client registration; a 30-second reuse window (`AUTH_REFRESH_REUSE_SECONDS`) makes concurrent refreshes and
   retries safe; sign-ins are stored in files by default (`AUTH_STORE=file`, a `/data` volume in Docker) so restarts

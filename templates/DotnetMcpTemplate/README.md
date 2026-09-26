@@ -105,7 +105,9 @@ The server URL is `APP_URL` + `MCP_PATH`, for example `https://mcp.example.com/m
 | Cursor | `~/.cursor/mcp.json`: `{ "mcpServers": { "my-server": { "url": "…/mcp" } } }` |
 | MCP Inspector | `npx @modelcontextprotocol/inspector` → Streamable HTTP → the URL |
 
-A client's redirect URI must match `AUTH_ALLOWED_REDIRECT_URIS`. Details: [connecting clients](docs/development/connecting-clients.md).
+Any MCP client can connect; there is no allow-list. Only unsafe redirect URIs are refused (`http` outside localhost,
+`javascript:`, `data:`, `file:`), and the consent page shows every new client. Details:
+[connecting clients](docs/development/connecting-clients.md).
 
 ## MCP App UI
 
@@ -273,7 +275,7 @@ HTTP. In production, terminate TLS at a reverse proxy and set `APP_URL` to the p
 | `MCP_AUTH_MODE=none` is refused | Only allowed with `APP_ENV=dev` |
 | Login fails with `IDX20803: Unable to obtain configuration` | Open `OIDC_DISCOVERY_URL` in a browser: it must return JSON (note the dot in `/.well-known/`) |
 | Identity provider says the redirect URI is invalid | Register `${APP_URL}/oauth/callback` exactly, not `APP_URL` alone |
-| A client can't register (`invalid_redirect_uri`) | Add its redirect URI pattern to `AUTH_ALLOWED_REDIRECT_URIS` |
+| A client can't register (`invalid_redirect_uri`) | Its redirect URI is unsafe: it must be `https`, `http` on localhost, or an app scheme |
 | Users must sign in again after a restart | `AUTH_STORE=memory` loses sign-ins: use `file` (default) or `redis`; in Docker keep the `/data` volume |
 | `.env` changes have no effect under `dotnet watch` | Settings are read at startup: press Ctrl+R in the watch terminal |
 | `UI bundle not found at …/ui_dist/<entry>.html` | `cd ui && pnpm install && pnpm run build` |

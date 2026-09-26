@@ -11,9 +11,6 @@ public static class Policies
     /// <summary>Requires the <c>projects:write</c> scope.</summary>
     public const string ProjectsWrite = AppScopes.ProjectsWrite;
 
-    /// <summary>Requires the <c>admin</c> role (from OIDC_ROLE_CLAIM).</summary>
-    public const string Admin = "admin";
-
     internal static IServiceCollection AddAppPolicies(this IServiceCollection services)
     {
         services.AddSingleton<IAuthorizationHandler, ScopeAuthorizationHandler>();
@@ -21,10 +18,11 @@ public static class Policies
         services.AddAuthorizationBuilder()
             .AddPolicy(ProjectsWrite, policy => policy
                 .RequireAuthenticatedUser()
-                .AddRequirements(new ScopeRequirement(AppScopes.ProjectsWrite)))
-            .AddPolicy(Admin, policy => policy
-                .RequireAuthenticatedUser()
-                .RequireRole("admin"));
+                .AddRequirements(new ScopeRequirement(AppScopes.ProjectsWrite)));
+
+        // Policies on IdP claims (roles, groups, tenant, ...): copy the claim with OIDC_TOKEN_CLAIMS, then e.g.
+        //   .AddPolicy("admin", policy => policy.RequireAuthenticatedUser().RequireClaim("roles", "admin"))
+        // IdPs name and shape these claims differently, so the template doesn't assume one.
 
         return services;
     }

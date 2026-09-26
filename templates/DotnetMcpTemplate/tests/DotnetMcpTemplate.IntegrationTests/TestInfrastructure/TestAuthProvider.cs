@@ -10,7 +10,7 @@ namespace DotnetMcpTemplate.IntegrationTests.TestInfrastructure;
 
 /// <summary>
 /// AUTH_PROVIDER=test. A working example of a custom provider: found automatically because this assembly
-/// references the app. Token format: <c>Bearer test|{userId}|{space-separated scopes}|{comma-separated roles}</c>.
+/// references the app. Token format: <c>Bearer test|{userId}|{space-separated scopes}</c>.
 /// </summary>
 public sealed class TestAuthProvider : IAuthProvider
 {
@@ -25,7 +25,7 @@ public sealed class TestAuthProvider : IAuthProvider
         context.AuthorizationServers.Add(context.PublicUrl);
     }
 
-    public static string Token(string userId, string scopes = "mcp:tools", string roles = "") => $"test|{userId}|{scopes}|{roles}";
+    public static string Token(string userId, string scopes = "mcp:tools") => $"test|{userId}|{scopes}";
 }
 
 public sealed class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
@@ -46,12 +46,8 @@ public sealed class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions>
             new(AppClaims.Name, "Test " + parts[1]),
             new(AppClaims.Scope, parts.Length > 2 ? parts[2] : string.Empty),
         };
-        if (parts.Length > 3)
-        {
-            claims.AddRange(parts[3].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(r => new Claim(AppClaims.Roles, r)));
-        }
 
-        var identity = new ClaimsIdentity(claims, TestAuthProvider.SchemeName, AppClaims.Name, AppClaims.Roles);
+        var identity = new ClaimsIdentity(claims, TestAuthProvider.SchemeName, AppClaims.Name, ClaimTypes.Role);
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), TestAuthProvider.SchemeName)));
     }
 }

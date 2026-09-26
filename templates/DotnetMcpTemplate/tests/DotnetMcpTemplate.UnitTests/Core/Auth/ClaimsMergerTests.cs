@@ -5,7 +5,7 @@ namespace DotnetMcpTemplate.UnitTests.Core.Auth;
 
 public sealed class ClaimsMergerTests
 {
-    private readonly ClaimsMerger _merger = new(new OidcSettings { RoleClaim = "realm_access.roles" });
+    private readonly ClaimsMerger _merger = new();
 
     [Fact]
     public void Merge_drops_protocol_claims_and_userinfo_wins()
@@ -29,19 +29,5 @@ public sealed class ClaimsMergerTests
         var userInfo = JsonNode.Parse("""{"sub":"someone-else"}""")!.AsObject();
 
         Assert.Throws<OAuthException>(() => _merger.Merge(idToken, userInfo));
-    }
-
-    [Fact]
-    public void Roles_are_read_from_nested_claims()
-    {
-        var claims = JsonNode.Parse("""{"realm_access":{"roles":["admin","user"]}}""")!.AsObject();
-        Assert.Equal(["admin", "user"], _merger.Roles(claims));
-    }
-
-    [Fact]
-    public void Space_separated_values_are_split()
-    {
-        var claims = JsonNode.Parse("""{"groups":"a b"}""")!.AsObject();
-        Assert.Equal(["a", "b"], ClaimsMerger.ReadList(claims, "groups"));
     }
 }
