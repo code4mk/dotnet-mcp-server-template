@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Code4mk",
+  "classifications": ["Web", "MCP", "AI", "Solution"],
+  "identity": "Code4mk.McpServer.Template",
+  "name": "Code4mk MCP Server Solution",
+  "description": "ASP.NET Core MCP server (official C# SDK 2.0): tools, resources, prompts, MCP Apps, OIDC proxy auth for any IdP, typed API clients, validation, Docker, tests and docs.",
+  "shortName": "code4mk-mcp",
+  "sourceName": "DotnetMcpTemplate",
+  "preferNameDirectory": true,
+  "tags": { "language": "C#", "type": "solution" },
+  "guids": [
+    "0B0E3A61-6A0D-4E0B-9E53-3E1A1D6B7C01",
+    "0B0E3A61-6A0D-4E0B-9E53-3E1A1D6B7C02",
+    "0B0E3A61-6A0D-4E0B-9E53-3E1A1D6B7C03",
+    "0B0E3A61-6A0D-4E0B-9E53-3E1A1D6B7C04",
+    "0B0E3A61-6A0D-4E0B-9E53-3E1A1D6B7C05",
+    "0B0E3A61-6A0D-4E0B-9E53-3E1A1D6B7C06"
+  ],
+  "forms": {
+    "nonAlphanumericToDash": { "identifier": "replace", "pattern": "[^A-Za-z0-9]+", "replacement": "-" },
+    "lowerInvariant": { "identifier": "lowerCaseInvariant" },
+    "slug": { "identifier": "chain", "steps": ["nonAlphanumericToDash", "lowerInvariant"] }
+  },
+  "symbols": {
+    "projectSlug": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "slug",
+      "replaces": "dotnetmcptemplate-slug",
+      "description": "Lowercase, dash-separated name for Docker image and Compose project."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            "**/[Bb]in/**", "**/[Oo]bj/**", "**/.vs/**", "**/.idea/**", "**/*.user",
+            "**/TestResults/**", ".git/**", ".template.config/**", ".env",
+            "ui/node_modules/**", "ui/dist/**"
+          ]
+        }
+      ]
+    }
+  ]
+}

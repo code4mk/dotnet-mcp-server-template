@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Packs templates/DotnetMcpTemplate into a NuGet template package: dotnet pack TemplatePack.csproj -->
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>Code4mk.McpServer.Template</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Title>Code4mk MCP Server</Title>
+    <Authors>Code4mk</Authors>
+    <Description>ASP.NET Core MCP server template (official C# SDK 2.0): tools, resources, prompts, MCP Apps, OIDC proxy auth for any IdP, typed API clients, validation, Docker, tests and docs.</Description>
+    <PackageTags>dotnet-new;templates;mcp;model-context-protocol;aspnetcore;oidc</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/code4mk/dotnet-mcp-template</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/code4mk/dotnet-mcp-template</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <TargetFramework>net10.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <NoWarn>$(NoWarn);NU5128;NU5110;NU5111</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="templates/**/*"
+             Exclude="templates/**/bin/**;templates/**/obj/**;templates/**/.vs/**;templates/**/TestResults/**;templates/**/node_modules/**" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- MCPEXP003: MCP Apps is marked experimental in SDK 2.0. -->
+    <NoWarn>$(NoWarn);MCPEXP003</NoWarn>
+  </PropertyGroup>
+</Project>

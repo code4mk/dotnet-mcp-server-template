@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+  Placeholder MCP App bundle (plain HTML, no build needed). Replace it by building the React app in ui/:
+    cd ui && pnpm install && pnpm run build   → writes ../src/DotnetMcpTemplate/ui_dist/projects-dashboard.html
+  The host renders this in a sandboxed iframe and sends the tool result (structured content) via postMessage
+  (MCP Apps: ui/notifications/tool-result). The React app should use @modelcontextprotocol/ext-apps.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects dashboard</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 16px; }
+    h1 { font-size: 16px; margin: 0 0 12px; }
+    .total { font-size: 28px; font-weight: 600; }
+    .row { display: grid; grid-template-columns: 160px 1fr 32px; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
+    .bar { height: 10px; border-radius: 5px; background: #1f6feb; }
+    .muted { opacity: .7; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Projects per owner</h1>
+  <div class="total" id="total">…</div>
+  <div class="muted" id="subtitle">Waiting for data from the host.</div>
+  <div id="rows"></div>
+  <script>
+    function render(summary) {
+      if (!summary || !summary.byOwner) return;
+      document.getElementById('total').textContent = summary.totalProjects + ' projects';
+      document.getElementById('subtitle').textContent = summary.owners + ' owners';
+      const max = Math.max(...summary.byOwner.map(o => o.projects), 1);
+      document.getElementById('rows').innerHTML = summary.byOwner.map(o =>
+        `<div class="row"><span>${o.ownerName.replace(/[<>&]/g, '')}</span>` +
+        `<div class="bar" style="width:${(o.projects / max) * 100}%"></div><span>${o.projects}</span></div>`).join('');
+    }
+    // Minimal listener for the host's tool result notification (JSON-RPC over postMessage).
+    window.addEventListener('message', (event) => {
+      const message = event.data;
+      if (message && message.method === 'ui/notifications/tool-result') {
+        render(message.params && message.params.structuredContent);
+      }
+    });
+    // Tell the host we're ready (MCP Apps initialize handshake is handled by @modelcontextprotocol/ext-apps in the React app).
+    window.parent && window.parent.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/initialized', params: {} }, '*');
+  </script>
+</body>
+</html>

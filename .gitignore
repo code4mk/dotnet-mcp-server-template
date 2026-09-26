@@ -1,0 +1,10 @@
+[Bb]in/
+[Oo]bj/
+.vs/
+.idea/
+*.user
+*.nupkg
+artifacts/
+TestResults/
+node_modules/
+.DS_Store

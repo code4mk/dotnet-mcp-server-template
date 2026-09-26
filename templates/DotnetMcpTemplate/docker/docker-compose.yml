@@ -1,0 +1,24 @@
+# From the repository root:
+#   cp .env.example .env
+#   docker compose -f docker/docker-compose.yml up --build
+# The container listens on APP_PORT and is published on the same host port.
+
+name: dotnetmcptemplate-slug
+
+services:
+  mcp:
+    image: dotnetmcptemplate-slug:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    env_file: ../.env
+    environment:
+      APP_PORT: ${APP_PORT:-5080}
+    ports:
+      - "${APP_PORT:-5080}:${APP_PORT:-5080}"
+    restart: unless-stopped
+
+  # Uncomment for several instances (AUTH_STORE=redis, REDIS_URL=redis:6379).
+  # redis:
+  #   image: redis:7-alpine
+  #   restart: unless-stopped

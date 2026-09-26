@@ -1,0 +1,38 @@
+name: template-ci
+
+# Proves the template works: install it, create a project, build and test that project.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install template from source
+        run: dotnet new install ./templates/DotnetMcpTemplate
+
+      - name: Create a sample project
+        run: dotnet new code4mk-mcp -n Sample.Mcp -o "$RUNNER_TEMP/sample-mcp"
+
+      - name: Build and test the sample project
+        working-directory: ${{ runner.temp }}/sample-mcp
+        run: |
+          dotnet build -c Release
+          dotnet test -c Release --no-build
+
+      - name: Check that no placeholder names are left
+        working-directory: ${{ runner.temp }}/sample-mcp
+        run: |
+          if grep -rIi --exclude-dir=bin --exclude-dir=obj "dotnetmcptemplate" .; then
+            echo "Found leftover placeholder"; exit 1
+          fi
+
+      - name: Pack the template
+        run: dotnet pack TemplatePack.csproj -c Release -o artifacts
