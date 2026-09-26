@@ -10,8 +10,8 @@
     <Description>ASP.NET Core MCP server template (official C# SDK 2.0): tools, resources, prompts, MCP Apps, OIDC proxy auth for any IdP, typed API clients, validation, Docker, tests and docs.</Description>
     <PackageTags>dotnet-new;templates;mcp;model-context-protocol;aspnetcore;oidc</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/code4mk/dotnet-mcp-template</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/code4mk/dotnet-mcp-template</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/code4mk/dotnet-mcp-server-template</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/code4mk/dotnet-mcp-server-template</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <TargetFramework>net10.0</TargetFramework>

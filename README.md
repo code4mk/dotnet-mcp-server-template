@@ -27,7 +27,7 @@ dotnet new code4mk-mcp -n NexusRE.Mcp -o nexusre-mcp
 ```bash
 dotnet new install Code4mk.McpServer.Template        # from nuget.org
 # or from source:
-git clone https://github.com/code4mk/dotnet-mcp-template && dotnet new install ./dotnet-mcp-template/templates/DotnetMcpTemplate
+git clone https://github.com/code4mk/dotnet-mcp-server-template && dotnet new install ./dotnet-mcp-server-template/templates/DotnetMcpTemplate
 ```
 
 ## 2. Create a project
@@ -60,7 +60,7 @@ in Finder (`Cmd+Shift+.`) or Explorer.
 ## Repository layout
 
 ```text
-dotnet-mcp-template/
+dotnet-mcp-server-template/
 ├── README.md, CHANGELOG.md, LICENSE
 ├── TemplatePack.csproj              packs the template (dotnet pack)
 ├── .github/workflows/               template-ci (create + build + test a project), publish (nuget.org on tags)
