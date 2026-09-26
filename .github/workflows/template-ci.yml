@@ -36,3 +36,31 @@ jobs:
 
       - name: Pack the template
         run: dotnet pack TemplatePack.csproj -c Release -o artifacts
+
+      - name: Package contains no local-only files
+        run: |
+          if unzip -l artifacts/*.nupkg | awk '{print $4}' | grep -E '(^|/)\.env(\..+)?$' | grep -v '\.env\.example$'; then
+            echo "::error::The package contains a .env file"; exit 1
+          fi
+
+  # The template's MCP App views: typecheck, build, and check the committed bundles are current.
+  ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: templates/DotnetMcpTemplate/ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Committed bundles match the source
+        run: |
+          if ! git diff --quiet -- ../src/DotnetMcpTemplate/ui_dist; then
+            git diff --stat -- ../src/DotnetMcpTemplate/ui_dist
+            echo "::error::ui_dist/ is out of date. Run 'pnpm run build' in templates/DotnetMcpTemplate/ui and commit the result."
+            exit 1
+          fi

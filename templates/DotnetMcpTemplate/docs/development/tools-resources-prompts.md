@@ -32,6 +32,8 @@ public sealed class InvoiceTools(IInvoiceService invoices)
 - Set annotations honestly: `ReadOnly`, `Destructive`, `Idempotent`, `OpenWorld` help clients decide on confirmations.
 - Throw `AppException.NotFound/Conflict/Rule(...)` for expected errors; the model receives the message.
 - Use `[Authorize(Policy = Policies.X)]` on a method for extra requirements (scopes, roles).
+- Return a record. Set `UseStructuredContent = true` when clients or an MCP App read the result as data: the tool
+  then returns `structuredContent` and publishes an output schema. Without it the result is JSON text.
 
 ## Resources
 

@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- Dev sandbox (`pnpm dev`): preview each MCP App with its sample data. Not built or shipped. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MCP Apps sandbox</title>
+    <script type="module">
+      import "@/styles.css";
+    </script>
+  </head>
+  <body>
+    <main class="mx-auto max-w-2xl space-y-6 p-8">
+      <header class="space-y-1">
+        <h1 class="text-2xl font-semibold">MCP Apps sandbox</h1>
+        <p class="text-sm text-text-secondary">
+          Each entry renders with its sample data (<code>apps/&lt;entry&gt;/sandbox.ts</code>). Inside an MCP host it gets the tool result instead.
+        </p>
+      </header>
+      <ul class="grid gap-3 sm:grid-cols-2">
+        <li>
+          <a
+            href="./projects-dashboard.html"
+            class="block rounded-xl border border-border-primary p-4 transition hover:border-accent hover:shadow-sm"
+          >
+            <div class="font-medium">projects-dashboard</div>
+            <div class="text-sm text-text-secondary">KPIs, projects per owner, drill-down with list_projects</div>
+          </a>
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

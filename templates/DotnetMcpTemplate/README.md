@@ -32,8 +32,5 @@ Connect MCP clients to `http://localhost:5080/mcp`. `GET /` returns server info.
 └── Directory.*.props     Shared build settings, central package versions
 ```
 
-Guides: [getting started](docs/development/getting-started.md), [configuration](docs/development/configuration-and-environments.md),
-[tools, resources, prompts](docs/development/tools-resources-prompts.md), [validation](docs/development/validation.md),
-[auth](docs/development/authentication-and-authorization.md), [custom providers](docs/development/custom-auth-providers.md),
-[API clients](docs/development/api-clients.md), [MCP Apps](docs/development/mcp-apps.md), [clients](docs/development/connecting-clients.md).
-All docs and ADRs: [docs/README.md](docs/README.md).
+Guides, organized by task: [docs/development/README.md](docs/development/README.md). Architecture decisions:
+[docs/README.md](docs/README.md). MCP App views: [ui/README.md](ui/README.md).

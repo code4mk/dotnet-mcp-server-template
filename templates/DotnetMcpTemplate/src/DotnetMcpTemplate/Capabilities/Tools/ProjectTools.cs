@@ -14,7 +14,7 @@ namespace DotnetMcpTemplate.Capabilities.Tools;
 [Authorize]
 public sealed class ProjectTools(IProjectService projects)
 {
-    [McpServerTool(Name = "list_projects", Title = "List projects", ReadOnly = true, Destructive = false, Idempotent = true)]
+    [McpServerTool(Name = "list_projects", Title = "List projects", ReadOnly = true, Destructive = false, Idempotent = true, UseStructuredContent = true)]
     [Description("Lists projects, optionally for one owner, one page at a time.")]
     public Task<PagedResult<ProjectDto>> ListProjects(
         [Range(1, int.MaxValue), Description("Only projects of this owner (user id).")] int? ownerUserId = null,

@@ -7,8 +7,8 @@
     <PackageVersion>1.0.0</PackageVersion>
     <Title>Code4mk MCP Server</Title>
     <Authors>Code4mk</Authors>
-    <Description>ASP.NET Core MCP server template (official C# SDK 2.0): tools, resources, prompts, MCP Apps, OIDC proxy auth for any IdP, typed API clients, validation, Docker, tests and docs.</Description>
-    <PackageTags>dotnet-new;templates;mcp;model-context-protocol;aspnetcore;oidc</PackageTags>
+    <Description>Production-ready Model Context Protocol (MCP) server for ASP.NET Core (.NET 10, official C# SDK 2.0): tools, resources and prompts; OAuth for any OIDC identity provider (Entra ID, Google, Auth0, Okta, Keycloak) with consent; MCP Apps UI (React + Tailwind); typed API clients; validation; tests; Docker; docs.</Description>
+    <PackageTags>dotnet-new;templates;mcp;mcp-server;model-context-protocol;aspnetcore;oauth;oidc;claude;ai;llm;mcp-apps</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/code4mk/dotnet-mcp-server-template</PackageProjectUrl>
     <RepositoryUrl>https://github.com/code4mk/dotnet-mcp-server-template</RepositoryUrl>
@@ -24,8 +24,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- NoDefaultExcludes packs dotfiles (.github, .gitignore, ...) but pack ignores .gitignore: exclude local-only
+         files here. Never ship .env: it holds real credentials. .env.example is added back explicitly. -->
     <Content Include="templates/**/*"
-             Exclude="templates/**/bin/**;templates/**/obj/**;templates/**/.vs/**;templates/**/TestResults/**;templates/**/node_modules/**" />
+             Exclude="templates/**/bin/**;templates/**/obj/**;templates/**/.vs/**;templates/**/.idea/**;templates/**/TestResults/**;templates/**/node_modules/**;templates/**/ui/dist/**;templates/**/.env;templates/**/.env.*;templates/**/*.user;templates/**/.DS_Store;templates/**/Thumbs.db" />
+    <Content Include="templates/**/.env.example" />
     <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 

@@ -1,42 +1,33 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.0] - 2026-09-27
 
-### Changed
-
-- Folder layout: tools, resources and prompts live in `Capabilities/`; external API clients in `Integrations/`;
-  plumbing in `Core/` (`ApiClients` base, `Auth`, `Mcp` with `Filters/` and `Apps/`, `Validation`, `Common`,
-  `ServerInfo`). Namespaces follow folders and tests mirror the source tree. `AddApiClients` is now `AddIntegrations`.
-- `global.json` pins the .NET SDK (CI and Docker use it).
-- Watch mode: `dotnet watch` + `pnpm run watch` documented in getting-started; in dev, MCP App bundles are read
-  from the project's `ui_dist/`, so rebuilt bundles are served without a restart.
-- Startup logs the public URL (`Server running at ...`) next to Kestrel's `http://[::]:port` bind address.
-- Consent page redesigned after the FastMCP OAuth proxy screen: server and client names, the redirect URI in a
-  "Credentials will be sent to" box, collapsible advanced details (client id, scopes), Allow Access / Deny, a
-  "Why am I seeing this?" tooltip and dark mode. The error page uses the same style.
-- Docs: index at `docs/README.md`, a scopes section and OIDC callback / discovery troubleshooting in the auth guide,
-  and updated paths in every guide.
-- Scopes are defined in code (`Core/Auth/AppScopes.cs`) instead of `AUTH_SCOPES_SUPPORTED`; the dev user always has
-  every scope and the `admin` role (`AUTH_DEV_USER_ROLES` removed).
-
-### Fixed
-
-- A client that requests no scope now gets no extra permissions instead of every scope.
-- The server listens on IPv4 and IPv6, so `localhost` works when it resolves to `::1`.
-- `Microsoft.Extensions.Http.Resilience` pinned to 10.9.0 (10.8.3 does not exist, NU1603).
-- CS0114 warning on `ApiClientException.Source`, and a unit test that did not compile.
-
-## [1.0.0] - 2026-09-26
+First release.
 
 ### Added
 
-- MCP server on ASP.NET Core with ModelContextProtocol.AspNetCore 2.0 (stateless Streamable HTTP).
-- Tools, resources (templated, direct, MCP App `ui://`) and prompts, grouped by component, on a service layer.
-- Argument validation for tools and prompts (data annotations, nested objects, `IValidatableObject`).
-- Auth: OIDC proxy for any identity provider (DCR, consent, PKCE, ID token + userinfo merge, rotating refresh
-  tokens, encrypted IdP tokens), `jwt` resource-server provider, extensible `IAuthProvider`, dev mode.
-- Typed API clients (`ApiClient` base) with env-configured auth, retries, circuit breaker, timeouts, correlation ids.
-- MCP Apps with the SDK extension, `ui/` React + Vite workspace and a placeholder bundle.
-- `.env` settings (DotNetEnv + validated typed settings), `APP_PORT`, minimal JSON server info at `/`.
-- Unit, integration (real MCP client, full OAuth flow against a fake IdP) and architecture tests.
-- Dockerfile (optional UI build stage), Compose, CI, ADRs and guides.
+- **MCP server** on ASP.NET Core (.NET 10) with ModelContextProtocol.AspNetCore 2.0: stateless Streamable HTTP;
+  tools, resources (templated, direct, MCP App `ui://`) and prompts discovered from attributes; structured content.
+- **Layout:** `Capabilities/` (tools, resources, prompts), `Services/`, `Models/`, `Integrations/` (external API
+  clients), `Core/` (auth, MCP setup and filters, validation, settings, errors, server info). Namespaces follow
+  folders; tests mirror the source tree; architecture tests enforce the call direction and auth on every item.
+- **Validation** of every tool and prompt call (data annotations, nested objects, `IValidatableObject`), returned as
+  errors the model can fix.
+- **Auth:** OIDC proxy for any OIDC identity provider (dynamic client registration, PKCE, ID token + userinfo merge,
+  rotating refresh tokens, encrypted IdP tokens, memory or Redis store), consent page in the style of the FastMCP
+  OAuth proxy, `jwt` resource-server provider, extensible `IAuthProvider`, dev mode. Scopes are defined in code
+  (`Core/Auth/AppScopes.cs`); clients get only the scopes they request.
+- **MCP Apps UI** (`ui/`): ext-apps 2, React 19, Vite 8, Tailwind 4. One folder per view, shared host connection
+  (`useToolOutput`, `useCallTool`, `useMcpApp`), host theme tokens, zod-validated tool outputs, failed / cancelled
+  results shown in the view, dev sandbox with sample data (left out of production bundles), per-entry or full
+  builds. Sample `projects-dashboard` with drill-down through `list_projects`.
+- **Typed API clients** (`ApiClient` base) with env-configured auth (`bearer`, `api_key`, `basic`,
+  `client_credentials`, user token), retries, circuit breaker, timeouts, correlation ids.
+- **Settings:** `.env` (DotNetEnv) plus typed settings validated at startup; `APP_PORT`, `APP_URL`; dual-stack
+  listening (`localhost`, `127.0.0.1`, `[::1]`); startup logs the public URL; minimal JSON server info at `/`.
+- **Dev loop:** `dotnet watch` and `pnpm run watch`; rebuilt MCP App bundles are served without a restart.
+- **Tests:** unit, integration (a real MCP client, including the full OAuth flow against a fake IdP) and
+  architecture tests.
+- **Ship:** multi-stage Dockerfile (optional UI build), Compose, GitHub Actions (build, test, UI bundle check,
+  Docker), `global.json`, central package management.
+- **Docs:** 10 guides indexed by task (`docs/development/README.md`) and 4 ADRs.

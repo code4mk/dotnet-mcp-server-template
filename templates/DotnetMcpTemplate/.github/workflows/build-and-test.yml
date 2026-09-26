@@ -17,3 +17,25 @@ jobs:
       - run: dotnet build --no-restore -c Release
       - run: dotnet test --no-build -c Release
       - run: docker build -f docker/Dockerfile -t dotnetmcptemplate-slug:ci .
+
+  # MCP App views: typecheck, build every entry, and fail if the committed bundles in ui_dist/ are out of date.
+  ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Committed bundles match the source
+        run: |
+          if ! git diff --quiet -- ../src/DotnetMcpTemplate/ui_dist; then
+            git diff --stat -- ../src/DotnetMcpTemplate/ui_dist
+            echo "::error::ui_dist/ is out of date. Run 'pnpm run build' in ui/ and commit the result."
+            exit 1
+          fi

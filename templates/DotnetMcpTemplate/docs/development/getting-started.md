@@ -1,6 +1,7 @@
 # Getting started
 
-Requirements: .NET 10 SDK (version pinned in `global.json`). Optional: Docker, Node 22 + pnpm (for the MCP Apps UI).
+Requirements: .NET 10 SDK (version pinned in `global.json`). Optional: Docker, Node 22+ and pnpm
+(`corepack enable`) for the MCP Apps UI.
 
 ```bash
 cp .env.example .env
