@@ -20,7 +20,8 @@ public static class Policies
                 .RequireAuthenticatedUser()
                 .AddRequirements(new ScopeRequirement(AppScopes.ProjectsWrite)));
 
-        // Policies on IdP claims (roles, groups, tenant, ...): copy the claim with OIDC_TOKEN_CLAIMS, then e.g.
+        // Policies on IdP claims (roles, groups, tenant, ...): copy the claim with OIDC_TOKEN_CLAIMS or set it in an
+        // ITokenClaimsEnricher (docs/development/users-and-claims.md), then e.g.
         //   .AddPolicy("admin", policy => policy.RequireAuthenticatedUser().RequireClaim("roles", "admin"))
         // IdPs name and shape these claims differently, so the template doesn't assume one.
 

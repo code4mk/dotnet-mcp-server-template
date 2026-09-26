@@ -8,8 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 namespace DotnetMcpTemplate.Core.Auth.Oidc;
 
 /// <summary>
-/// Issues the server's access tokens: a JWT (HS256) with the merged identity's core claims, roles, groups,
-/// granted scopes and any OIDC_TOKEN_CLAIMS. Audience = the MCP URL, issuer = APP_URL.
+/// Issues the server's access tokens: a JWT (HS256) with the merged identity's core claims, the granted scopes, any
+/// OIDC_TOKEN_CLAIMS, and whatever the registered <see cref="ITokenClaimsEnricher"/>s add. Audience = the MCP URL,
+/// issuer = APP_URL.
 /// </summary>
 public sealed class TokenIssuer(
     AuthCrypto crypto,
@@ -17,7 +18,8 @@ public sealed class TokenIssuer(
     OidcProxySettings proxy,
     AppSettings app,
     McpSettings mcp,
-    TimeProvider time)
+    TimeProvider time,
+    IServiceScopeFactory scopeFactory)
 {
     private static readonly string[] StandardClaims =
     [
@@ -29,7 +31,7 @@ public sealed class TokenIssuer(
 
     public TimeSpan Lifetime => TimeSpan.FromMinutes(proxy.TokenLifetimeMinutes);
 
-    public string CreateAccessToken(UserSession session, IReadOnlyList<string> scopes)
+    public async Task<string> CreateAccessTokenAsync(UserSession session, IReadOnlyList<string> scopes, TokenIssue reason, CancellationToken cancellationToken)
     {
         var merged = JsonNode.Parse(session.MergedClaimsJson)!.AsObject();
         var now = time.GetUtcNow().UtcDateTime;
@@ -52,6 +54,8 @@ public sealed class TokenIssuer(
             }
         }
 
+        await EnrichAsync(session, scopes, reason, merged, claims, cancellationToken);
+
         return _handler.CreateToken(new SecurityTokenDescriptor
         {
             Issuer = app.PublicUrl,
@@ -62,5 +66,44 @@ public sealed class TokenIssuer(
             Claims = claims,
             SigningCredentials = new SigningCredentials(crypto.AccessTokenKey, SecurityAlgorithms.HmacSha256),
         });
+    }
+
+    /// <summary>Runs the registered enrichers in a DI scope, then restores the protected claims.</summary>
+    private async Task EnrichAsync(
+        UserSession session, IReadOnlyList<string> scopes, TokenIssue reason, JsonObject merged, Dictionary<string, object> claims,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var enrichers = scope.ServiceProvider.GetServices<ITokenClaimsEnricher>().ToArray();
+        if (enrichers.Length == 0)
+        {
+            return;
+        }
+
+        var protectedValues = claims.Where(c => TokenClaimsContext.Protected.Contains(c.Key)).ToArray();
+        var context = new TokenClaimsContext(
+            reason,
+            session.Subject,
+            session.ClientId,
+            scopes,
+            IdpClaims.Parse(session.IdTokenJson),
+            IdpClaims.Parse(session.UserInfoJson),
+            (JsonObject)merged.DeepClone(),
+            IdpClaims.Parse(session.SessionDataJson) ?? new JsonObject(),
+            claims);
+        foreach (var enricher in enrichers)
+        {
+            await enricher.EnrichAsync(context, cancellationToken);
+        }
+
+        foreach (var name in TokenClaimsContext.Protected)
+        {
+            claims.Remove(name);
+        }
+
+        foreach (var (name, value) in protectedValues)
+        {
+            claims[name] = value;
+        }
     }
 }

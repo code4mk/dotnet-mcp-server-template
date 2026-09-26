@@ -31,6 +31,7 @@ Read top to bottom when you're new; jump to a section when you have a task.
 | Guide | Covers |
 | --- | --- |
 | [Authentication and authorization](authentication-and-authorization.md) | Auth modes, the OIDC proxy, any MCP client, `jwt` provider, policies, scopes, IdP claims, troubleshooting |
+| [Users and claims](users-and-claims.md) | ID token vs userinfo; read claims anywhere; call your backend at sign-in (`ISignInHandler`); shape the token (`ITokenClaimsEnricher`) |
 | [Custom auth providers](custom-auth-providers.md) | Implement `IAuthProvider` for anything else |
 
 ## 5. Keep it correct
@@ -49,6 +50,8 @@ Read top to bottom when you're new; jump to a section when you have a task.
 | Add a setting | [Configuration → Typed settings](configuration-and-environments.md#typed-settings) |
 | Require a scope | [Auth → Scopes](authentication-and-authorization.md#scopes) |
 | Use IdP roles or groups | [Auth → Roles, groups and other IdP claims](authentication-and-authorization.md#roles-groups-and-other-idp-claims) |
+| Read the user's claims, or add claims to the token | [Users and claims](users-and-claims.md) |
+| Sync users to my backend or fetch permissions at sign-in | [Users and claims → At sign-in](users-and-claims.md#at-sign-in-isigninhandler-oidc-provider) |
 | Show a UI for a tool | [MCP Apps](mcp-apps.md), then [Adding a view](../../ui/README.md#adding-a-view) |
 | Fix a login problem | [Auth → Default provider](authentication-and-authorization.md#default-provider-oidc-proxy-auth_provideroidc) |
 | Test a tool with auth | [Testing → Integration tests](testing.md#integration-tests-the-server-as-a-client-sees-it) |

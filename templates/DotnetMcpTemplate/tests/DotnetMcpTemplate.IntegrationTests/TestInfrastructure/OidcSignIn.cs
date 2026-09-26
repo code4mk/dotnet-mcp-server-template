@@ -25,6 +25,23 @@ public static partial class OidcSignIn
 
     public static async Task<Result> SignInAsync(OidcProxyServerFactory factory)
     {
+        var (browser, clientId, verifier, callbackRedirect) = await UntilCallbackAsync(factory);
+        var code = QueryHelpers.ParseQuery(callbackRedirect.Query)["code"].ToString();
+
+        var tokens = await TokenAsync(browser, new()
+        {
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["redirect_uri"] = RedirectUri,
+            ["client_id"] = clientId,
+            ["code_verifier"] = verifier,
+        });
+        return new Result(browser, clientId, tokens);
+    }
+
+    /// <summary>Runs the flow up to the IdP callback and returns where the server sends the MCP client next.</summary>
+    public static async Task<(HttpClient Browser, string ClientId, string Verifier, Uri CallbackRedirect)> UntilCallbackAsync(OidcProxyServerFactory factory)
+    {
         var browser = Browser(factory);
         var registration = await (await browser.PostAsJsonAsync("/oauth/register", new
         {
@@ -55,17 +72,7 @@ public static partial class OidcSignIn
 
         OidcProxyServerFactory.Idp.Nonce = idpAuthorize["nonce"];
         var callback = await browser.GetAsync($"/oauth/callback?code=upstream-code&state={Uri.EscapeDataString(idpAuthorize["state"]!)}");
-        var code = QueryHelpers.ParseQuery(callback.Headers.Location!.Query)["code"].ToString();
-
-        var tokens = await TokenAsync(browser, new()
-        {
-            ["grant_type"] = "authorization_code",
-            ["code"] = code,
-            ["redirect_uri"] = RedirectUri,
-            ["client_id"] = clientId,
-            ["code_verifier"] = verifier,
-        });
-        return new Result(browser, clientId, tokens);
+        return (browser, clientId, verifier, callback.Headers.Location!);
     }
 
     public static Dictionary<string, string> Refresh(string refreshToken, string clientId) => new()

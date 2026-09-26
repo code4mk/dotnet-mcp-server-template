@@ -108,3 +108,6 @@ if (user.ClaimValues("roles").Contains("admin")) { ... }
 ```
 
 With the `jwt` provider the IdP's claims are already in the token; skip step 1.
+
+To call your backend once per sign-in (sync the user, fetch permissions, refuse access) use an `ISignInHandler`; to
+map or compute claims on every token (Keycloak's nested `realm_access.roles`, a tenant) use an `ITokenClaimsEnricher`. Reading claims in tools, services, middleware and filters: [users and claims](users-and-claims.md).

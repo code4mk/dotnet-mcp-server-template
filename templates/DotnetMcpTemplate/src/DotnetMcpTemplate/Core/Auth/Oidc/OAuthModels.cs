@@ -39,7 +39,10 @@ public sealed record UserSession(
     string Issuer,
     string MergedClaimsJson,
     string EncryptedUpstreamTokens,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? IdTokenJson = null,
+    string? UserInfoJson = null,
+    string? SessionDataJson = null);
 
 public sealed record RefreshTokenEntry(string SessionId, string ClientId, IReadOnlyList<string> Scopes);
 

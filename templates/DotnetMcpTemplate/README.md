@@ -83,7 +83,10 @@ identity provider (Entra ID, Google, Auth0, Okta, Keycloak, Zitadel, ...):
 2. Set `OIDC_DISCOVERY_URL`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` in `.env`, and `MCP_AUTH_MODE=required`.
 3. Connect a client: it registers, shows the consent page, and sends you to the identity provider to sign in.
 
-Tools, resources and prompts declare `[Authorize]` or `[AllowAnonymous]`. Scopes are defined in
+Tools, resources and prompts declare `[Authorize]` or `[AllowAnonymous]`. Inject `AppUser` anywhere (tools, services,
+middleware, endpoints) to read the user's claims. Call your backend once per sign-in with an `ISignInHandler` (sync
+users, fetch permissions, deny access) and shape the token with an `ITokenClaimsEnricher`
+([users and claims](docs/development/users-and-claims.md)). Scopes are defined in
 `Core/Auth/AppScopes.cs` and policies in `Core/Auth/Policies.cs`.
 
 **Users sign in once.** Expired access tokens are renewed with rotating refresh tokens, every refresh extends the

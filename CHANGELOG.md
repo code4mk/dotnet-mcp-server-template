@@ -19,6 +19,10 @@ First release.
   unsafe for OAuth are refused (non-loopback `http`, `javascript:`, `data:`, `file:`). Scopes are defined in code
   (`Core/Auth/AppScopes.cs`); clients get only the scopes they request. No IdP-specific role or group mapping: copy
   any IdP claim with `OIDC_TOKEN_CLAIMS` and use it in a policy.
+- **Users and claims:** `AppUser` in tools, services, middleware, endpoints and filters. `ISignInHandler` runs once
+  per sign-in with the ID token and userinfo apart and the IdP access token: call your backend, store `SessionData`,
+  or deny. `ITokenClaimsEnricher` shapes the server token at sign-in and on every refresh (protected claims can't be
+  changed).
 - **Users sign in once:** rotating refresh tokens renew expired access tokens; every refresh extends the session and
   the client registration; a 30-second reuse window (`AUTH_REFRESH_REUSE_SECONDS`) makes concurrent refreshes and
   retries safe; sign-ins are stored in files by default (`AUTH_STORE=file`, a `/data` volume in Docker) so restarts
@@ -39,4 +43,4 @@ First release.
   architecture tests.
 - **Ship:** multi-stage Dockerfile (optional UI build), Compose, GitHub Actions (build, test, UI bundle check,
   Docker), `global.json`, central package management.
-- **Docs:** 11 guides indexed by task (`docs/development/README.md`) and 4 ADRs.
+- **Docs:** 12 guides indexed by task (`docs/development/README.md`) and 4 ADRs.

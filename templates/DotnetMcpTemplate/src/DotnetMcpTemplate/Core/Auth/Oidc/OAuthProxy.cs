@@ -24,6 +24,7 @@ public sealed class OAuthProxy(
     TokenIssuer issuer,
     RedirectUriPolicy redirectPolicy,
     TimeProvider time,
+    IServiceScopeFactory scopeFactory,
     ILogger<OAuthProxy> logger)
 {
     public const string AuthorizePath = "/oauth/authorize";
@@ -232,6 +233,26 @@ public sealed class OAuthProxy(
         var idClaims = await idp.ValidateIdTokenAsync(tokens.IdToken, transaction.UpstreamNonce, cancellationToken);
         var userInfo = tokens.AccessToken is null ? null : await idp.GetUserInfoAsync(tokens.AccessToken, cancellationToken);
         var merged = merger.Merge(idClaims, userInfo);
+        var subject = merged["sub"]!.ToString();
+        var issuerName = idClaims["iss"]?.ToString() ?? string.Empty;
+
+        // Your sign-in handlers: sync the user, fetch permissions, or refuse the sign-in.
+        var signIn = new SignInContext(subject, issuerName, transaction.ClientId, transaction.Scopes, idClaims, userInfo, merged, tokens.AccessToken);
+        try
+        {
+            await RunSignInHandlersAsync(signIn, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "A sign-in handler failed for user {Subject}", subject);
+            return ErrorRedirect(transaction.RedirectUri, "server_error", "Sign-in could not be completed. Try again later.", transaction.ClientState);
+        }
+
+        if (signIn.DeniedReason is { } reason)
+        {
+            logger.LogInformation("Sign-in of {Subject} refused by a sign-in handler: {Reason}", subject, reason);
+            return ErrorRedirect(transaction.RedirectUri, "access_denied", reason, transaction.ClientState);
+        }
 
         var upstream = new UpstreamTokens(
             tokens.AccessToken ?? string.Empty,
@@ -240,12 +261,15 @@ public sealed class OAuthProxy(
 
         var session = new UserSession(
             Id: AuthCrypto.RandomToken(18),
-            Subject: merged["sub"]!.ToString(),
+            Subject: subject,
             ClientId: transaction.ClientId,
-            Issuer: idClaims["iss"]?.ToString() ?? string.Empty,
+            Issuer: issuerName,
             MergedClaimsJson: merged.ToJsonString(),
             EncryptedUpstreamTokens: crypto.Encrypt(JsonSerializer.Serialize(upstream)),
-            CreatedAt: time.GetUtcNow());
+            CreatedAt: time.GetUtcNow(),
+            IdTokenJson: idClaims.ToJsonString(),
+            UserInfoJson: userInfo?.ToJsonString(),
+            SessionDataJson: signIn.SessionData.Count > 0 ? signIn.SessionData.ToJsonString() : null);
         await store.SetAsync(AuthStore.SessionKey(session.Id), session, TimeSpan.FromDays(proxy.RefreshTokenLifetimeDays), cancellationToken);
 
         var code = AuthCrypto.RandomToken();
@@ -261,6 +285,20 @@ public sealed class OAuthProxy(
             ["state"] = transaction.ClientState,
             ["iss"] = Issuer,   // RFC 9207
         }.Where(p => p.Value is not null));
+    }
+
+    /// <summary>Runs the registered <see cref="ISignInHandler"/>s in a DI scope, in order, until one denies.</summary>
+    private async Task RunSignInHandlersAsync(SignInContext context, CancellationToken cancellationToken)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        foreach (var handler in scope.ServiceProvider.GetServices<ISignInHandler>())
+        {
+            await handler.OnSignInAsync(context, cancellationToken);
+            if (context.DeniedReason is not null)
+            {
+                return;
+            }
+        }
     }
 
     // ------------------------------------------------------------------ token endpoint
@@ -303,7 +341,7 @@ public sealed class OAuthProxy(
             ?? throw new OAuthException("invalid_grant", "The sign-in session has expired.");
 
         await KeepClientAsync(client, cancellationToken);
-        return await IssueAsync(session, client.ClientId, entry.Scopes, cancellationToken);
+        return await IssueAsync(session, client.ClientId, entry.Scopes, TokenIssue.SignIn, cancellationToken);
     }
 
     // Refresh tokens rotate: each one is used once and answered with a new pair. The session and the client
@@ -328,7 +366,7 @@ public sealed class OAuthProxy(
 
         await store.SetAsync(AuthStore.SessionKey(session.Id), session, TimeSpan.FromDays(proxy.RefreshTokenLifetimeDays), cancellationToken);
         await KeepClientAsync(client, cancellationToken);
-        var response = await IssueAsync(session, client.ClientId, entry.Scopes, cancellationToken);
+        var response = await IssueAsync(session, client.ClientId, entry.Scopes, TokenIssue.Refresh, cancellationToken);
 
         if (proxy.RefreshReuseSeconds > 0)
         {
@@ -363,9 +401,9 @@ public sealed class OAuthProxy(
     private Task KeepClientAsync(ClientRegistration client, CancellationToken cancellationToken) =>
         store.SetAsync(AuthStore.ClientKey(client.ClientId), client, TimeSpan.FromDays(proxy.ClientRegistrationDays), cancellationToken);
 
-    private async Task<object> IssueAsync(UserSession session, string clientId, IReadOnlyList<string> scopes, CancellationToken cancellationToken)
+    private async Task<object> IssueAsync(UserSession session, string clientId, IReadOnlyList<string> scopes, TokenIssue reason, CancellationToken cancellationToken)
     {
-        var accessToken = issuer.CreateAccessToken(session with { ClientId = clientId }, scopes);
+        var accessToken = await issuer.CreateAccessTokenAsync(session with { ClientId = clientId }, scopes, reason, cancellationToken);
         var refreshToken = AuthCrypto.RandomToken();
         await store.SetAsync(AuthStore.RefreshKey(refreshToken), new RefreshTokenEntry(session.Id, clientId, scopes),
             TimeSpan.FromDays(proxy.RefreshTokenLifetimeDays), cancellationToken);
